@@ -1,6 +1,6 @@
 import pytest
-from src.message_repository import MessageRepository, MessageModel
-from src.message import Message
+from src.message_repository.message_repository import MessageRepository
+from src.message.message import Message
 from sqlalchemy import inspect
 from datetime import datetime
 

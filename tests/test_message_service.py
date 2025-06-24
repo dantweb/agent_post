@@ -1,8 +1,9 @@
-import pytest
-from src.message_service import MessageService
-from src.message import Message
+
 from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta
+
+from src.message.message import Message
+from src.message_service.message_service import MessageService
 
 
 @patch('src.city_api.CityAPI.get_cities')

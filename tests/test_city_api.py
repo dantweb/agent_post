@@ -1,5 +1,5 @@
 import pytest
-from src.city_api import CityAPI
+from src.city_api.city_api import CityAPI
 from unittest.mock import patch
 import requests
 

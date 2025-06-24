@@ -1,5 +1,5 @@
 import pytest
-from src.message import Message
+from src.message.message import Message
 from datetime import datetime, timedelta
 
 

@@ -1,5 +1,5 @@
 import pytest
-from src.external_api import ExternalAPI
+from src.external_api.external_api import ExternalAPI
 from unittest.mock import patch
 import requests
 
