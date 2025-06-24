@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
-from src.city_api.city_api import CityAPI
-from src.external_api.external_api import ExternalAPI
-from src.message.message import Message
-from src.message_repository.message_repository import MessageRepository
+from src.city_api import CityAPI
+from src.external_api import ExternalAPI
+from src.message import Message
+from src.message_repository import MessageRepository
 
 
 class MessageService:
