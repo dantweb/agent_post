@@ -68,7 +68,7 @@ class TestMessageFlow(unittest.TestCase):
         # Step 5: Validate message was posted (delivered)
         mock_post.assert_called()
         called_url = mock_post.call_args[0][0]
-        self.assertIn("1234", called_url)
+        self.assertIn("5678", called_url)
 
 
 if __name__ == '__main__':

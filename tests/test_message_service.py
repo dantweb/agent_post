@@ -12,28 +12,33 @@ class TestMessageService(unittest.TestCase):
         external_api = MagicMock()
         message_repo = MagicMock()
 
-        # Simulated data
+        # ✅ Step 1: Return a valid address
         city_api.get_cities.return_value = {
             "city_name": "Test City",
             "cloud_id": "cloud27",
             "addresses": [
-                {"john_33": "https://localhost:5000/loopland/api/v1/agent/232342/msg"}
+                {"citizen_1": "https://mock/loopland/api/v1/agent/1234/msg"},
+                {"citizen_2": "https://mock/loopland/api/v1/agent/5678/msg"},
             ]
         }
+
+        # ✅ Step 2: Return a valid message
         external_api.collect_from_outbox.return_value = [{
-            "from": "john_33",
-            "to": "john_mikal_51",
+            "from": "citizen_1",
+            "to": "citizen_2",
             "data": "some data",
-            "metadata": {"created_at": "2024-10-27T10:00:00"}
+            "metadata": {"created_at": datetime.now().isoformat()}
         }]
 
-        # Service and call
+        external_api.add_to_inbox.return_value = None
+
+        # Step 3: Service
         service = MessageService(city_api, external_api, message_repo)
         service.process_messages()
 
-        # Verify
-        self.assertTrue(message_repo.save.called)
-        self.assertTrue(external_api.add_to_inbox.called)
+        # ✅ Step 4: Assert message_repo.save() was called
+        assert message_repo.save.called
+        assert external_api.add_to_inbox.called
 
     def test_message_service_remove_old_messages(self):
         old_message = Message(

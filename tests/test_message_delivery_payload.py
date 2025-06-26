@@ -59,7 +59,7 @@ class TestMessageDeliveryPayload(unittest.TestCase):
         called_url = actual_post_calls[0][0][0]  # first argument of the first call
         payload = actual_post_calls[0][1]['json']  # keyword argument 'json'
 
-        self.assertIn("1234", called_url)
+        self.assertIn("5678", called_url)
         self.assertEqual(payload["from"], "citizen_1")
         self.assertEqual(payload["to"], "citizen_2")
         self.assertEqual(payload["data"], "Hello!")
