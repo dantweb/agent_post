@@ -28,9 +28,8 @@ jobs:
 
       - name: Run tests
         run: |
-          sed -i -e 's/DEBUG = True/DEBUG = False/' config.py
           source .venv/bin/activate
-          python run_tests.py
+          python -m unittest discover -s tests
 
       - name: Upload test cache
         if: always()
