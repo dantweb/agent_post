@@ -1,4 +1,4 @@
 {
   "cities_url": "https://api.example.com/cities?token=YOUR_API_TOKEN",
-  "database_url": "postgresql://user:password@host:port/database"  // Your database connection string
+  "database_url": "postgresql://postgres:admin@postgres:5432/agent_post"  // Your database connection string
 }
