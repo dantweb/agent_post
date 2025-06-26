@@ -1,7 +1,6 @@
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, func
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.exc import SQLAlchemyError
-
 from src.message import Message
 
 Base = declarative_base()
@@ -40,7 +39,17 @@ class MessageRepository:
         session = self.Session()
         try:
             messages = session.query(MessageModel).all()
-            return [Message(**msg.__dict__) for msg in messages]  # convert from MessageModel to Message
+            return [
+                Message(
+                    id=msg.id,
+                    created_at=msg.created_at,
+                    collected_at=msg.collected_at,
+                    delivered_at=msg.delivered_at,
+                    from_address=msg.from_address,
+                    to_address=msg.to_address,
+                    data=msg.data
+                ) for msg in messages
+            ]
         except SQLAlchemyError as e:
             raise Exception(f"Error retrieving messages: {e}")
         finally:
@@ -68,7 +77,17 @@ class MessageRepository:
                 (MessageModel.from_address.like(f'%{address}%')) |
                 (MessageModel.to_address.like(f'%{address}%'))
             ).all()
-            return [Message(**msg.__dict__) for msg in messages]
+            return [
+                Message(
+                    id=msg.id,
+                    created_at=msg.created_at,
+                    collected_at=msg.collected_at,
+                    delivered_at=msg.delivered_at,
+                    from_address=msg.from_address,
+                    to_address=msg.to_address,
+                    data=msg.data
+                ) for msg in messages
+            ]
         except SQLAlchemyError as e:
             raise Exception(f"Error retrieving messages: {e}")
         finally:

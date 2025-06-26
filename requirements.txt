@@ -1,5 +1,5 @@
 alembic==1.14.1
-altgraph @ file:///AppleInternal/Library/BuildRoots/39d9dc1a-2111-11f0-be06-226177e5bb69/Library/Caches/com.apple.xbs/Sources/python3/altgraph-0.17.2-py2.py3-none-any.whl
+altgraph==0.17.2
 annotated-types==0.7.0
 anyio==4.8.0
 async-timeout==5.0.1
@@ -22,7 +22,7 @@ Flask-Login==0.6.3
 Flask-Migrate==4.1.0
 Flask-SocketIO==5.5.1
 Flask-SQLAlchemy==3.1.1
-future @ file:///AppleInternal/Library/BuildRoots/39d9dc1a-2111-11f0-be06-226177e5bb69/Library/Caches/com.apple.xbs/Sources/python3/future-0.18.2-py3-none-any.whl
+future==0.18.2
 gevent==24.11.1
 greenlet==3.1.1
 h11==0.14.0
@@ -35,7 +35,7 @@ itsdangerous==2.2.0
 Jinja2==3.1.5
 jiter==0.8.2
 jwt==1.3.1
-macholib @ file:///AppleInternal/Library/BuildRoots/39d9dc1a-2111-11f0-be06-226177e5bb69/Library/Caches/com.apple.xbs/Sources/python3/macholib-1.15.2-py2.py3-none-any.whl
+macholib==1.15.2
 Mako==1.3.9
 MarkupSafe==3.0.2
 numpy==2.0.2
@@ -44,7 +44,7 @@ packaging==24.2
 pandas==2.2.3
 pillow==11.1.0
 pluggy==1.6.0
-psycopg2==2.9.10
+psycopg2-binary==2.9.10
 pycparser==2.22
 pydantic==2.10.6
 pydantic_core==2.27.2
@@ -60,7 +60,7 @@ redis==5.2.1
 replicate==1.0.4
 requests==2.32.3
 simple-websocket==1.1.0
-six @ file:///AppleInternal/Library/BuildRoots/39d9dc1a-2111-11f0-be06-226177e5bb69/Library/Caches/com.apple.xbs/Sources/python3/six-1.15.0-py2.py3-none-any.whl
+six==1.15.0
 sniffio==1.3.1
 soupsieve==2.6
 SQLAlchemy==2.0.38
