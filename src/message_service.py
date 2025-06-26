@@ -19,18 +19,45 @@ class MessageService:
             try:
                 messages_data = self.external_api.collect_from_outbox(url)
                 for msg in messages_data:
-                    message = Message(id=0,  # You need to generate unique IDs here
-                                      created_at=datetime.fromisoformat(msg['metadata']['created_at']),
-                                      collected_at=datetime.now(),
-                                      delivered_at=None,
-                                      from_address=f"{url.split('/')[6]}/{msg['from']}",
-                                      to_address=f"{url.split('/')[6]}/{msg['to']}",
-                                      data=msg['data'])
-                    self.message_repo.save(message)
-                    self.external_api.add_to_inbox(url, msg)
+                    # Split the 'to' field by common delimiters
+                    raw_to_field = msg['to']
+                    to_parts = [raw_to_field]  # fallback
+
+                    for delim in [';', ',', ' ']:
+                        if delim in raw_to_field:
+                            to_parts = [addr.strip() for addr in raw_to_field.replace(';', ' ').replace(',', ' ').split()]
+                            break
+
+                    # Get sender prefix (e.g., agent_id from URL)
+                    sender_prefix = url.split('/')[6]
+
+                    for recipient in set(to_parts):  # remove duplicates
+                        recipient_url = next(
+                            (addr for data in cities_data['addresses'] for key, addr in data.items() if key == recipient),
+                            None
+                        )
+
+                        if recipient_url:
+                            # Save message with updated recipient
+                            message = Message(
+                                id=None,
+                                created_at=datetime.fromisoformat(msg['metadata']['created_at']),
+                                collected_at=datetime.now(),
+                                delivered_at=None,
+                                from_address=f"{sender_prefix}/{msg['from']}",
+                                to_address=f"{recipient_url.split('/')[6]}/{recipient}",
+                                data=msg['data']
+                            )
+                            self.message_repo.save(message)
+
+                            # Deliver message
+                            self.external_api.add_to_inbox(recipient_url, msg)
+
             except Exception as e:
                 print(f"Error processing messages from {url}: {e}")
+
         self.remove_old_messages()
+
 
     def remove_old_messages(self) -> None:
         messages = self.message_repo.find_all()
