@@ -59,7 +59,7 @@ class TestMultiRecipientMessage(unittest.TestCase):
         posted_urls = [call[0][0] for call in post_calls]
         posted_recipients = set(u.split("/agent/")[1].split("/")[0] for u in posted_urls)
 
-        self.assertIn("7676", posted_recipients)
+        self.assertIn("2222", posted_recipients)
         self.assertIn("3333", posted_recipients)
 
         # Step 4: Assert each received a call
