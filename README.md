@@ -105,14 +105,6 @@ python -m unittest tests.test_message_flow
 
 ---
 
-### 🐳 Docker (Optional)
-
-A Docker setup can be added with:
-
-* `Dockerfile`
-* `docker-compose.yml`
-
----
 
 ### 🔁 Features
 
@@ -133,6 +125,128 @@ All pushes and pull requests trigger:
 
 Check `.github/workflows/test.yml`.
 
+Here’s an updated `README.md` section that documents how the `external_api` and `city_api` components work, including their data formats:
+
 ---
 
-Let me know if you'd like a `Dockerfile`, `.env.example`, or sample curl command in the README.
+### 🛰️ External API and City API Interfaces
+
+This project uses two main external interfaces:
+
+---
+
+Here is the updated `README.md` section with **examples for multiple recipients**, covering how `ExternalAPI` handles `to` fields with multiple addresses separated by `space`, `comma`, or `semicolon`:
+
+---
+
+### 🛰️ External API and City API Interfaces
+
+This project uses two primary external interfaces to coordinate message passing between agents in a simulated smart city:
+
+---
+
+#### 🌆 `CityAPI`
+
+**Class**: `src.city_api.CityAPI`
+
+**Method**: `get_cities()`
+
+**Purpose**: Retrieve cloud agent endpoints.
+
+**Example Return**:
+
+```json
+{
+  "city_name": "Loopland",
+  "cloud_id": "cloud_test",
+  "addresses": [
+    { "citizen_1": "https://cloud.mock/loopland/api/v1/agent/1234/msg" },
+    { "citizen_2": "https://cloud.mock/loopland/api/v1/agent/5678/msg" }
+  ]
+}
+```
+
+---
+
+#### ✉️ `ExternalAPI`
+
+**Class**: `src.external_api.ExternalAPI`
+
+Handles:
+
+* Pulling messages from the outbox of other agents
+* Delivering messages to the inboxes of recipients
+
+---
+
+### 📤 `collect_from_outbox(url: str)`
+
+* **Request**:
+  `GET <url>?token=TOKEN&action=collect_from_outbox`
+
+* **Example Response**:
+
+```json
+{
+  "messages": [
+    {
+      "from": "citizen_1",
+      "to": "citizen_2",
+      "data": "Hello!",
+      "metadata": {
+        "created_at": "2025-06-26T17:51:36"
+      }
+    }
+  ]
+}
+```
+
+---
+
+### 🧑‍🤝‍🧑 Multiple Recipients Support
+
+The `to` field **can include multiple recipients** separated by:
+
+* Commas: `"citizen_2,citizen_3"`
+* Semicolons: `"citizen_2; citizen_3"`
+* Spaces: `"citizen_2 citizen_3"`
+
+**Example message with multiple recipients**:
+
+```json
+{
+  "from": "citizen_1",
+  "to": "citizen_2, citizen_3; citizen_4 citizen_5",
+  "data": "Hello all!",
+  "metadata": {
+    "created_at": "2025-06-26T17:51:36"
+  }
+}
+```
+
+**Behavior**:
+
+* The message is **split** and **delivered individually** to each recipient.
+* The backend trims whitespace and deduplicates recipient URLs using data from the `CityAPI`.
+
+---
+
+### 📥 `add_to_inbox(url: str, message: Dict)`
+
+* **Request**:
+  `POST <url>?token=TOKEN&action=add_to_inbox`
+
+* **Request Payload**:
+
+```json
+{
+  "from": "citizen_1",
+  "to": "citizen_2",
+  "data": "Hello!",
+  "metadata": {
+    "created_at": "2025-06-26T17:51:36"
+  }
+}
+```
+
+If multiple recipients are specified, this call is made once per resolved recipient address.
