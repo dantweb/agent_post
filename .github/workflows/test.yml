@@ -28,6 +28,7 @@ jobs:
 
       - name: Run tests
         run: |
+          sed -e
           source .venv/bin/activate
           python run_tests.py
 
