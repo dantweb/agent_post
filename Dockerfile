@@ -18,4 +18,4 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . .
 
-CMD ["python", "run_tests.py"]
+CMD ["python", "app.py"]
