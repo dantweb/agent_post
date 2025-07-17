@@ -1,6 +1,5 @@
 FROM python:3.9-slim
 
-# Install system dependencies needed to build gevent and psycopg2
 RUN apt-get update && apt-get install -y \
     gcc \
     libffi-dev \
@@ -8,7 +7,12 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     make \
+    iputils-ping \
+    net-tools \
+    dnsutils \
+    traceroute \
     && rm -rf /var/lib/apt/lists/*
+
 
 
 WORKDIR /app

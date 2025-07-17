@@ -11,6 +11,6 @@ class CityAPI:
         try:
             response: Response = requests.get(self.api_url)
             response.raise_for_status()
-            return response.json()
+            return response.json().get('data')
         except RequestException as e:
             raise Exception(f"Error fetching cities data: {e}")

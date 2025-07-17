@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, func
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.exc import SQLAlchemyError
-from src.message import Message
+from message import Message
 
 Base = declarative_base()
 
