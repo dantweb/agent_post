@@ -9,6 +9,6 @@ if __name__ == '__main__':
     loader = unittest.TestLoader()
     tests = loader.discover('tests')
     print(f"Discovered tests: {tests}")
-    runner = unittest.TextTestRunner()
+    runner = unittest.TextTestRunner(buffer=False)
     result = runner.run(tests)
     sys.exit(not result.wasSuccessful())

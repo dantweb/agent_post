@@ -26,10 +26,8 @@ class MessageService:
         # Create a single dictionary from all addresses dictionaries
         addresses = {}
         for city_dict in cities_data.get('addresses', []):
-            # Update the main addresses dictionary with each city's agent mappings
             addresses.update(city_dict)
 
-        # Replace WAKEUP with RECEIVE_MSG in all URLs
         for agent_name, url in addresses.items():
             addresses[agent_name] = url.replace("WAKEUP", "RECEIVE_POST")
 
@@ -38,34 +36,24 @@ class MessageService:
 
     def process_messages(self) -> None:
         cities_data = self.city_api.get_cities()
-
-        # Get the agent_name -> URL mapping with WAKEUP replaced by RECEIVE_MSG
         addresses_dict = self.get_agent_addresses(cities_data)
 
-        # Use all URLs for collecting from outboxes
         for agent_name, url in addresses_dict.items():
             try:
                 messages_data = self.external_api.collect_from_outbox(url)
                 for msg in messages_data:
-                    # Split the 'to' field by common delimiters
-                    raw_to_field = msg['message']['to']
-                    to_parts = [raw_to_field]  # fallback
-
-                    for delim in [';', ',', ' ']:
-                        if delim in raw_to_field:
-                            to_parts = [addr.strip() for addr in
-                                        raw_to_field.replace(';', ' ').replace(',', ' ').split()]
-                            break
-
-                    for recipient in set(to_parts):  # remove duplicates
-                        # Look up recipient URL directly from our addresses dictionary
+                    for recipient in set(msg.address_list):
                         recipient_url = addresses_dict.get(recipient)
-
                         if recipient_url:
                             self.external_api.add_to_inbox(recipient_url, msg)
 
             except Exception as e:
-                print(f"Error processing messages from {url}: {e}")
+                print(f"Error processing messages from {url}: {str(e)}")
+                print(f"Exception type: {type(e).__name__}")
+                print(f"Message details: {msg if 'msg' in locals() else 'No message available'}")
+                import traceback
+
+                traceback.print_exc()
 
         self.remove_old_messages()
 

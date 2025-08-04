@@ -26,7 +26,18 @@ class MessageRepository:
     def save(self, message: Message) -> None:
         session = self.Session()
         try:
-            message_model = MessageModel(**message.__dict__)  # convert from Message to MessageModel
+            # Create a clean dictionary of just the fields MessageModel expects
+            message_dict = {
+                'id': message.id,
+                'created_at': message.created_at,
+                'collected_at': message.collected_at,
+                'delivered_at': message.delivered_at,
+                'from_address': message.from_address,
+                'to_address': message.to_address,
+                'data': message.data
+            }
+
+            message_model = MessageModel(**message_dict)  # Only include fields that exist in MessageModel
             session.add(message_model)
             session.commit()
         except SQLAlchemyError as e:
@@ -92,3 +103,15 @@ class MessageRepository:
             raise Exception(f"Error retrieving messages: {e}")
         finally:
             session.close()
+
+
+    def __eq__(self, other):
+        if not isinstance(other, Message):
+            return False
+        return (
+                self.id == other.id and
+                self.from_address == other.from_address and
+                self.to_address == other.to_address and
+                self.data == other.data
+            # Intentionally not comparing datetime fields as they might have microsecond differences
+        )

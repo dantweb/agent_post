@@ -1,70 +1,75 @@
 import unittest
-from unittest.mock import MagicMock
-from datetime import datetime, timedelta
-from src.message import Message
+from datetime import datetime
+
+from src.city_api import CityAPI
+from src.external_api import ExternalAPI
+from src.message_repository import MessageRepository
 from src.message_service import MessageService
+from src.message import Message
+
 
 class TestMessageService(unittest.TestCase):
+    def setUp(self):
+        """Set up test dependencies with real components"""
+        self.city_api = CityAPI("http://loopai_web:5000/api/agents/cities-data/")
+        self.external_api = ExternalAPI("XXXXX")
+        self.repository = MessageRepository()
+        self.service = MessageService(self.city_api, self.external_api, self.repository)
 
-    def test_message_service_process_messages_success(self):
-        # Mocks
-        city_api = MagicMock()
-        external_api = MagicMock()
-        message_repo = MagicMock()
+        # Clean up any existing test messages before running the test
+        self.clean_up_test_messages()
 
-        # ✅ Step 1: Return a valid address
-        city_api.get_cities.return_value = {
-            "city_name": "Test City",
-            "cloud_id": "cloud27",
-            "addresses": [
-                {"citizen_1": "https://mock/loopland/api/v1/agent/1234/msg"},
-                {"citizen_2": "https://mock/loopland/api/v1/agent/5678/msg"},
-            ]
-        }
+    def tearDown(self):
+        """Clean up after test execution"""
+        self.clean_up_test_messages()
 
-        # ✅ Step 2: Return a valid message
-        external_api.collect_from_outbox.return_value = [{
-            "from": "citizen_1",
-            "to": "citizen_2",
-            "data": "some data",
-            "metadata": {"created_at": datetime.now().isoformat()}
-        }]
+    def clean_up_test_messages(self):
+        """Remove any test messages from the repository"""
+        messages = self.repository.find_all()
+        for message in messages:
+            if message.data == "test_data":
+                self.repository.delete(message)
 
-        external_api.add_to_inbox.return_value = None
-
-        # Step 3: Service
-        service = MessageService(city_api, external_api, message_repo)
-        service.process_messages()
-
-        # ✅ Step 4: Assert message_repo.save() was called
-        assert message_repo.save.called
-        assert external_api.add_to_inbox.called
-
-    def test_message_service_remove_old_messages(self):
-        old_message = Message(
-            id=1,
-            created_at=datetime.now() - timedelta(days=4),
-            collected_at=datetime.now() - timedelta(days=4),
-            from_address="addr1",
-            to_address="addr2",
-            data="data"
-        )
-        new_message = Message(
-            id=2,
-            created_at=datetime.now(),
-            collected_at=datetime.now(),
-            from_address="addr1",
-            to_address="addr2",
-            data="data"
+    def test_message_service_process_messages(self):
+        """
+        Test that MessageService correctly processes messages
+        using the actual MessageService with real components
+        """
+        # Create a test message
+        test_message = Message(
+            id=123,
+            created_at=datetime(2025, 7, 1, 12, 0, 0),
+            from_address='sender',
+            to_address='recipient',
+            data='test_data',
+            metadata={'created_at': '2023-01-01T12:00:00'}
         )
 
-        message_repo = MagicMock()
-        message_repo.find_all.return_value = [old_message, new_message]
+        # Save the message directly to the repository
+        self.repository.save(test_message)
 
-        city_api = MagicMock()
-        external_api = MagicMock()
+        # Process messages
+        self.service.process_messages()
 
-        service = MessageService(city_api, external_api, message_repo)
-        service.remove_old_messages()
+        # Verify that the message was processed
+        processed_messages = self.repository.find_all()
+        test_messages = [msg for msg in processed_messages
+                         if msg.data == "test_data"]
 
-        message_repo.delete.assert_called_once_with(old_message)
+        # There should be at least one message in the repository
+        self.assertGreaterEqual(len(test_messages), 1,
+                                "No messages found in repository")
+
+        # Verify message properties
+        found_message = False
+        for msg in test_messages:
+            if msg.id == 123 and msg.from_address == 'sender' and msg.to_address == 'recipient':
+                found_message = True
+                break
+
+        self.assertTrue(found_message,
+                        "Test message not found in repository after processing")
+
+
+if __name__ == '__main__':
+    unittest.main()

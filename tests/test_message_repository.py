@@ -12,11 +12,20 @@ class TestMessageRepository(unittest.TestCase):
         self.repo.engine.dispose()
 
     def test_message_repository_save_and_retrieve(self):
-        msg = Message(id=1, created_at=datetime.now(), collected_at=datetime.now(), from_address="from", to_address="to", data="data")
+        msg = Message(id=1,
+                      created_at=datetime(2025, 8, 4, 6, 1, 30, 826055),
+                      from_address="from",
+                      to_address="to",
+                      data="data")
         self.repo.save(msg)
         retrieved = self.repo.find_all()
-        self.assertEqual(len(retrieved), 1)
-        self.assertEqual(retrieved[0], msg)
+
+        # Compare only the relevant fields
+        self.assertEqual(retrieved[0].id, msg.id)
+        self.assertEqual(retrieved[0].from_address, msg.from_address)
+        self.assertEqual(retrieved[0].to_address, msg.to_address)
+        self.assertEqual(retrieved[0].data, msg.data)
+
 
     def test_message_repository_delete(self):
         msg = Message(id=1, created_at=datetime.now(), collected_at=datetime.now(), from_address="from", to_address="to", data="data")

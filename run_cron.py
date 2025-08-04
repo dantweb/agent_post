@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 
 # Define the base directory of the project, assuming the script is in agent_post/
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+
 # Add the 'src' directory to the Python path to allow importing project modules [2]
 SRC_DIR = os.path.join(BASE_DIR, 'src')
 sys.path.insert(0, SRC_DIR)
@@ -43,10 +44,12 @@ def run_message_processing_job():
     external_api_token = os.getenv('EXTERNAL_API_TOKEN')
 
     if not city_api_url:
-        print("⚠️ CITY_API_URL not set in .env. Using a placeholder 'http://mocked-city-api-url'. Please configure it in .env for production environments.")
+        print("⚠️ CITY_API_URL not set in .env. Using a placeholder 'http://mocked-city-api-url'. "
+              "Please configure it in .env for production environments.")
         city_api_url = "http://mocked-city-api-url" # Placeholder, replace with actual URL in .env
     if not external_api_token:
-        print("⚠️ EXTERNAL_API_TOKEN not set in .env. Using a placeholder 'default_token'. Please configure it in .env for production environments.")
+        print("⚠️ EXTERNAL_API_TOKEN not set in .env. "
+              "Using a placeholder 'default_token'. Please configure it in .env for production environments.")
         external_api_token = "default_token" # Placeholder, replace with actual token in .env
 
     try:
