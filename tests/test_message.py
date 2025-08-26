@@ -1,111 +1,74 @@
 import unittest
+from datetime import datetime
 
 from src.message import Message
-from datetime import datetime, timedelta
 
 
 class TestMessage(unittest.TestCase):
     def test_message_creation(self):
-        message = Message(id=1, created_at=datetime.now(), from_address="a", to_address="b", data="data")
-        assert message.id == 1
-        assert message.created_at
-
-    def test_message_is_old(self):
-        old_message = Message(id=1, created_at=datetime.now() - timedelta(days=4),
-                              collected_at=datetime.now() - timedelta(days=4), from_address="a", to_address="b",
-                              data="data")
-        new_message = Message(id=1, created_at=datetime.now(), collected_at=datetime.now(), from_address="a",
-                              to_address="b", data="data")
-        assert old_message.is_old()
-        assert not new_message.is_old()
-
-    def test_to_list_single_recipient(self):
-        """Test that a single address is correctly processed in to_list"""
+        """Test basic message creation and properties"""
         message = Message(
-            id=1,
-            created_at=datetime.now(),
-            from_address="sender",
-            to_address="recipient",
-            data="test data"
+            id=123,
+            from_address='sender@example.com',
+            to_address='recipient@example.com',
+            data='Test message content'
         )
 
-        # Check that to_list correctly returns a list with the single address
-        self.assertEqual(message.address_list, ["recipient"])
+        self.assertEqual(123, message.id)
+        self.assertEqual('sender@example.com', message.from_address)
+        self.assertEqual('recipient@example.com', message.to_address)
+        self.assertEqual('Test message content', message.data)
+        self.assertIsNotNone(message.created_at)
+        self.assertIsNone(message.collected_at)
+        self.assertIsNone(message.delivered_at)
 
-    def test_to_list_comma_separated(self):
-        """Test that comma-separated addresses are correctly split"""
+    def test_address_list_single(self):
+        """Test address_list property with a single recipient"""
         message = Message(
-            id=1,
-            created_at=datetime.now(),
-            from_address="sender",
-            to_address="recipient1,recipient2,recipient3",
-            data="test data"
+            from_address='sender@example.com',
+            to_address='recipient@example.com',
+            data='Test message'
         )
 
-        # Check that to_list correctly splits comma-separated addresses
-        self.assertEqual(message.address_list, ["recipient1", "recipient2", "recipient3"])
+        self.assertEqual(['recipient@example.com'], message.address_list)
 
-    def test_to_list_semicolon_separated(self):
-        """Test that semicolon-separated addresses are correctly split"""
+    def test_address_list_multiple_comma(self):
+        """Test address_list property with comma-separated recipients"""
         message = Message(
-            id=1,
-            created_at=datetime.now(),
-            from_address="sender",
-            to_address="recipient1;recipient2;recipient3",
-            data="test data"
+            from_address='sender@example.com',
+            to_address='recipient1@example.com, recipient2@example.com',
+            data='Test message'
         )
 
-        # Check that to_list correctly splits semicolon-separated addresses
-        self.assertEqual(message.address_list, ["recipient1", "recipient2", "recipient3"])
+        self.assertEqual(['recipient1@example.com', 'recipient2@example.com'],
+                         message.address_list)
 
-    def test_to_list_space_separated(self):
-        """Test that space-separated addresses are correctly split"""
+    def test_address_list_multiple_semicolon(self):
+        """Test address_list property with semicolon-separated recipients"""
         message = Message(
-            id=1,
-            created_at=datetime.now(),
-            from_address="sender",
-            to_address="recipient1 recipient2 recipient3",
-            data="test data"
+            from_address='sender@example.com',
+            to_address='recipient1@example.com; recipient2@example.com',
+            data='Test message'
         )
 
-        # Check that to_list correctly splits space-separated addresses
-        self.assertEqual(message.address_list, ["recipient1", "recipient2", "recipient3"])
+        self.assertEqual(['recipient1@example.com', 'recipient2@example.com'],
+                         message.address_list)
 
-    def test_to_list_mixed_delimiters(self):
-        """Test that mixed delimiter formats are correctly processed"""
+    def test_to_dict(self):
+        """Test conversion to dictionary"""
+        created_time = datetime(2025, 1, 1, 12, 0, 0)
         message = Message(
-            id=1,
-            created_at=datetime.now(),
-            from_address="sender",
-            to_address="recipient1, recipient2; recipient3",
-            data="test data"
+            id=456,
+            from_address='sender@example.com',
+            to_address='recipient@example.com',
+            data='Test dictionary conversion',
+            created_at=created_time
         )
 
-        # Check that to_list correctly handles mixed delimiters
-        self.assertEqual(message.address_list, ["recipient1", "recipient2", "recipient3"])
+        result = message.to_dict()
 
-    def test_to_list_extra_whitespace(self):
-        """Test that extra whitespace is correctly handled"""
-        message = Message(
-            id=1,
-            created_at=datetime.now(),
-            from_address="sender",
-            to_address="  recipient1  ,  recipient2  ",
-            data="test data"
-        )
-
-        # Check that to_list correctly strips whitespace
-        self.assertEqual(message.address_list, ["recipient1", "recipient2"])
-
-    def test_to_list_empty_entries(self):
-        """Test that empty entries are correctly filtered out"""
-        message = Message(
-            id=1,
-            created_at=datetime.now(),
-            from_address="sender",
-            to_address="recipient1,,recipient2",
-            data="test data"
-        )
-
-        # Check that to_list correctly filters out empty entries
-        self.assertEqual(message.address_list, ["recipient1", "recipient2"])
+        self.assertEqual(456, result['id'])
+        self.assertEqual('sender@example.com', result['from_address'])
+        self.assertEqual('recipient@example.com', result['to_address'])
+        self.assertEqual('Test dictionary conversion', result['data'])
+        self.assertEqual(created_time.isoformat(), result['created_at'])

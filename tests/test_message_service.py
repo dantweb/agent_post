@@ -1,75 +1,82 @@
 import unittest
 from datetime import datetime
+from unittest.mock import MagicMock, patch, call
 
 from src.city_api import CityAPI
 from src.external_api import ExternalAPI
-from src.message_repository import MessageRepository
 from src.message_service import MessageService
 from src.message import Message
 
 
 class TestMessageService(unittest.TestCase):
     def setUp(self):
-        """Set up test dependencies with real components"""
-        self.city_api = CityAPI("http://loopai_web:5000/api/agents/cities-data/")
-        self.external_api = ExternalAPI("XXXXX")
-        self.repository = MessageRepository()
-        self.service = MessageService(self.city_api, self.external_api, self.repository)
+        """Set up test dependencies with mock components"""
+        # Create mocks for external dependencies
+        self.city_api = MagicMock(spec=CityAPI)
+        self.external_api = MagicMock(spec=ExternalAPI)
 
-        # Clean up any existing test messages before running the test
-        self.clean_up_test_messages()
+        # Create the service with mocked dependencies
+        self.service = MessageService(self.city_api, self.external_api)
 
-    def tearDown(self):
-        """Clean up after test execution"""
-        self.clean_up_test_messages()
-
-    def clean_up_test_messages(self):
-        """Remove any test messages from the repository"""
-        messages = self.repository.find_all()
-        for message in messages:
-            if message.data == "test_data":
-                self.repository.delete(message)
-
-    def test_message_service_process_messages(self):
-        """
-        Test that MessageService correctly processes messages
-        using the actual MessageService with real components
-        """
-        # Create a test message
-        test_message = Message(
-            id=123,
-            created_at=datetime(2025, 7, 1, 12, 0, 0),
-            from_address='sender',
-            to_address='recipient',
-            data='test_data',
-            metadata={'created_at': '2023-01-01T12:00:00'}
+        # Setup test data
+        self.test_message = Message(
+            from_address='test_sender',
+            to_address='agent1, agent2',  # Multiple recipients in comma-separated format
+            data='Test multi-recipient message',
+            id=234,
+            created_at=datetime(2025, 8, 4, 6, 1, 30, 826055),
         )
 
-        # Save the message directly to the repository
-        self.repository.save(test_message)
+        # Setup mock responses
+        self.addresses_dict = {
+            'agent1': 'http://agent1/api/WAKEUP',
+            'agent2': 'http://agent2/api/WAKEUP'
+        }
 
-        # Process messages
+        # Mock city_api to return our test addresses
+        self.city_api.get_cities.return_value = {
+            'addresses': [self.addresses_dict]
+        }
+
+        # Mock external_api to return our test message
+        self.external_api.collect_from_outbox.return_value = [self.test_message]
+
+    def test_message_multiple_recipients(self):
+        """
+        Test that MessageService correctly processes messages for multiple recipients
+        """
+        # Execute the method under test
         self.service.process_messages()
 
-        # Verify that the message was processed
-        processed_messages = self.repository.find_all()
-        test_messages = [msg for msg in processed_messages
-                         if msg.data == "test_data"]
+        # Verify that collect_from_outbox was called for each agent address
+        self.assertEqual(self.external_api.collect_from_outbox.call_count, 2)
 
-        # There should be at least one message in the repository
-        self.assertGreaterEqual(len(test_messages), 1,
-                                "No messages found in repository")
+        # Create expected call list to verify correct order and parameters
+        expected_calls = [
+            call('http://agent2/api/RECEIVE_POST', self.test_message),
+            call('http://agent1/api/RECEIVE_POST', self.test_message)
+        ]
 
-        # Verify message properties
-        found_message = False
-        for msg in test_messages:
-            if msg.id == 123 and msg.from_address == 'sender' and msg.to_address == 'recipient':
-                found_message = True
-                break
+        # Verify add_to_inbox was called with the correct parameters
+        self.external_api.add_to_inbox.assert_has_calls(expected_calls, any_order=True)
 
-        self.assertTrue(found_message,
-                        "Test message not found in repository after processing")
+        # Verify the delivered_at timestamp was updated
+        self.assertIsNotNone(self.test_message.delivered_at)
 
+    def test_get_agent_addresses(self):
+        """Test that addresses are correctly extracted from cities data"""
+        cities_data = {
+            'addresses': [
+                {'agent1': 'http://agent1/api/WAKEUP'},
+                {'agent2': 'http://agent2/api/WAKEUP'}
+            ]
+        }
 
-if __name__ == '__main__':
-    unittest.main()
+        result = self.service.get_agent_addresses(cities_data)
+
+        expected = {
+            'agent1': 'http://agent1/api/WAKEUP',
+            'agent2': 'http://agent2/api/WAKEUP'
+        }
+
+        self.assertEqual(expected, result)
