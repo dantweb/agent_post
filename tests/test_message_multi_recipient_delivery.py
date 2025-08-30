@@ -61,20 +61,17 @@ class TestMultiRecipientMessage(unittest.TestCase):
         for i, recipient in enumerate(['agent1', 'agent2']):
             # Get the args from the i-th call to add_to_inbox
             call_args = self.external_api.add_to_inbox.call_args_list[i][0]
-            print(
-                f"add_to_inbox call {i} args: {call_args}")
 
             # First arg should be the URL with WAKEUP replaced by RECEIVE_POST
             expected_url = self.addresses_dict[recipient].replace('WAKEUP', 'RECEIVE_POST')
             actual_url = call_args[0]
-            print(f"add_to_inbox call {i} URL: {actual_url}")
 
             self.assertEqual(expected_url, actual_url,
                     f"Expected URL {expected_url} for {recipient}, but got {actual_url}")
 
-            # Second arg should be the message
+            print(call_args)
             message_arg = call_args[1]
-            self.assertEqual(self.test_message.data, message_arg.data)
+            self.assertEqual(self.test_message.data, message_arg)
             self.assertEqual(self.test_message.from_address, message_arg.from_address)
 
     def test_get_agent_addresses(self):

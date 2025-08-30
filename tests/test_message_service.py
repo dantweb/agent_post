@@ -33,12 +33,10 @@ class TestMessageService(unittest.TestCase):
             'agent2': 'http://agent2/api/WAKEUP'
         }
 
-        # Mock city_api to return our test addresses
         self.city_api.get_cities.return_value = {
             'addresses': [self.addresses_dict]
         }
 
-        # Mock external_api to return our test message
         self.external_api.collect_from_outbox.return_value = [self.test_message]
 
     def test_message_multiple_recipients(self):

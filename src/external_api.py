@@ -70,13 +70,16 @@ class ExternalAPI:
 
         return results
 
-    def add_to_inbox(self, url: str, message: Message) -> Response:
+    def add_to_inbox(self, url: str, message: dict) -> Response:
         if hasattr(message, 'to_dict'):
             # Use the to_dict method we added to the Message class
-            message_dict = message.to_dict()
-            response = requests.post(url, json=message_dict)
+            blob = { "updated_files": [{"file_content": message.to_dict(), "path": "message.json"}] }
+            response = requests.post(url, json=blob)
+        elif isinstance(message, Message):
+            blob = { "updated_files": [{"file_content": message, "path": "message.json"}] }
+            response = requests.post(url, json=blob)
         else:
-            # It's already a dict or some other type
-            response = requests.post(url, json=message)
+            blob = { "updated_files": [{"file_content": str(message), "path": "message.json"}] }
+            response = requests.post(url, json=blob)
 
         return response

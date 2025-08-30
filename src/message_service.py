@@ -57,11 +57,19 @@ class MessageService:
                         recipient_url = addresses_dict.get(recipient)
                         if recipient_url:
                             recipient_url = recipient_url.replace("WAKEUP", "RECEIVE_POST")
-                            response = self.external_api.add_to_inbox(recipient_url, msg)
-                            self.sender_list.append(msg.from_address)
 
                             # Mark the message as delivered
                             msg.delivered_at = datetime.now()
+                            filepath = f"./{msg.delivered_at}.txt"
+                            blob = {
+                                "updated_files": [{
+                                    "path": filepath,
+                                    "file_content": msg
+                                }]
+                            }
+                            response = self.external_api.add_to_inbox(recipient_url, blob)
+                            self.sender_list.append(msg.from_address)
+
 
             except Exception as e:
                 print(f"Error processing messages from {url}: {str(e)}")

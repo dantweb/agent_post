@@ -33,17 +33,9 @@ class TestMessageDeliveryPayload(unittest.TestCase):
         self.assertIsInstance(agent_addresses, dict)
         self.assertGreater(len(agent_addresses), 0, "No agent addresses found")
 
-        # Print for debugging
-        print(f"Retrieved {len(agent_addresses)} agent addresses from real City API")
-
-        # Verify URLs are correctly formatted
-        # Just verify URLs are strings and not empty
         for agent_name, url in agent_addresses.items():
             self.assertIsInstance(url, str)
             self.assertTrue(len(url) > 0)
-
-            # Debug output to see the actual mappings
-            print(f"Agent: {agent_name}, URL: {url}")
 
     def test_message_multiple_recipients(self):
         """Test handling of messages with multiple recipients"""
