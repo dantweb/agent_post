@@ -16,7 +16,7 @@ class ExternalAPI:
 
     def collect_from_outbox(self, url: str) -> List[Message]:
         try:
-            response: Response = requests.get(url)
+            response: Response = requests.post(url)
             response.raise_for_status()
             file_entries = self._extract_file_entries(response.json())
 

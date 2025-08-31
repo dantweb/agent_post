@@ -43,6 +43,7 @@ class MessageService:
 
         for agent_name, url in addresses_dict.items():
             try:
+                print(f"\n\n url for collect = {url}")
                 messages_data = self.external_api.collect_from_outbox(url)
                 for msg in messages_data:
                     # Create a unique identifier for this message
