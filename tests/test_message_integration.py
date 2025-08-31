@@ -69,81 +69,81 @@ class TestMessageIntegration(unittest.TestCase):
         print(f"\nRetrieved {len(addresses)} agent addresses from real City API")
 
 
-def test_message_delivery_integration(self):
-    """
-    Integration test that verifies a message is properly moved from sender's outbox to recipient's inbox
-    by checking the filesystem structure before and after message processing
-    """
-    import requests
-    import time
+    def test_message_delivery_integration(self):
+        """
+        Integration test that verifies a message is properly moved from sender's outbox to recipient's inbox
+        by checking the filesystem structure before and after message processing
+        """
+        import requests
+        import time
 
-    # Step 1: Setup test data
-    # Define sender and recipient agents
-    sender_agent_id = "1"  # Replace with actual sender agent ID
-    recipient_agent_id = "2"  # Replace with actual recipient agent ID
+        # Step 1: Setup test data
+        # Define sender and recipient agents
+        sender_agent_id = "1"  # Replace with actual sender agent ID
+        recipient_agent_id = "2"  # Replace with actual recipient agent ID
 
-    # Get the initial filesystem state for both agents
-    sender_fs_before = requests.get(f"http://loopai_web:5000/api/test/agentlife/fs?agent_id={sender_agent_id}").json()
-    recipient_fs_before = requests.get(
-        f"http://loopai_web:5000/api/test/agentlife/fs?agent_id={recipient_agent_id}").json()
+        # Get the initial filesystem state for both agents
+        sender_fs_before = requests.get(f"http://loopai_web:5000/api/test/agentlife/fs?agent_id={sender_agent_id}").json()
+        recipient_fs_before = requests.get(
+            f"http://loopai_web:5000/api/test/agentlife/fs?agent_id={recipient_agent_id}").json()
 
-    # Check if there's a message in the sender's outbox
-    sender_outbox = sender_fs_before.get('filesystem', {}).get('outbox', {}).get('new', {})
-    if not sender_outbox:
-        self.skipTest("No messages found in sender's outbox for testing")
+        # Check if there's a message in the sender's outbox
+        sender_outbox = sender_fs_before.get('filesystem', {}).get('outbox', {}).get('new', {})
+        if not sender_outbox:
+            self.skipTest("No messages found in sender's outbox for testing")
 
-    # Count messages in sender's outbox and recipient's inbox before processing
-    sender_outbox_msg_count = len(sender_outbox)
-    recipient_inbox_before = recipient_fs_before.get('filesystem', {}).get('inbox', {}).get('new', {})
-    recipient_inbox_msg_count_before = len(recipient_inbox_before) if recipient_inbox_before else 0
+        # Count messages in sender's outbox and recipient's inbox before processing
+        sender_outbox_msg_count = len(sender_outbox)
+        recipient_inbox_before = recipient_fs_before.get('filesystem', {}).get('inbox', {}).get('new', {})
+        recipient_inbox_msg_count_before = len(recipient_inbox_before) if recipient_inbox_before else 0
 
-    # Get a sample message ID from sender's outbox for tracking
-    sample_message_id = list(sender_outbox.keys())[0] if sender_outbox else None
-    if sample_message_id:
-        print(f"Tracking message ID: {sample_message_id}")
+        # Get a sample message ID from sender's outbox for tracking
+        sample_message_id = list(sender_outbox.keys())[0] if sender_outbox else None
+        if sample_message_id:
+            print(f"Tracking message ID: {sample_message_id}")
 
-    # Step 2: Process messages using our message service
-    self.message_service.process_messages()
+        # Step 2: Process messages using our message service
+        self.message_service.process_messages()
 
-    # Allow some time for processing to complete
-    time.sleep(2)
+        # Allow some time for processing to complete
+        time.sleep(2)
 
-    # Step 3: Get the filesystem state after processing
-    sender_fs_after = requests.get(f"http://loopai_web:5000/api/test/agentlife/fs?agent_id={sender_agent_id}").json()
-    recipient_fs_after = requests.get(
-        f"http://loopai_web:5000/api/test/agentlife/fs?agent_id={recipient_agent_id}").json()
+        # Step 3: Get the filesystem state after processing
+        sender_fs_after = requests.get(f"http://loopai_web:5000/api/test/agentlife/fs?agent_id={sender_agent_id}").json()
+        recipient_fs_after = requests.get(
+            f"http://loopai_web:5000/api/test/agentlife/fs?agent_id={recipient_agent_id}").json()
 
-    # Check sender's outbox after processing
-    sender_outbox_after = sender_fs_after.get('filesystem', {}).get('outbox', {}).get('new', {})
-    sender_outbox_msg_count_after = len(sender_outbox_after) if sender_outbox_after else 0
+        # Check sender's outbox after processing
+        sender_outbox_after = sender_fs_after.get('filesystem', {}).get('outbox', {}).get('new', {})
+        sender_outbox_msg_count_after = len(sender_outbox_after) if sender_outbox_after else 0
 
-    # Check recipient's inbox after processing
-    recipient_inbox_after = recipient_fs_after.get('filesystem', {}).get('inbox', {}).get('new', {})
-    recipient_inbox_msg_count_after = len(recipient_inbox_after) if recipient_inbox_after else 0
+        # Check recipient's inbox after processing
+        recipient_inbox_after = recipient_fs_after.get('filesystem', {}).get('inbox', {}).get('new', {})
+        recipient_inbox_msg_count_after = len(recipient_inbox_after) if recipient_inbox_after else 0
 
-    # Step 4: Verify message delivery
-    # The sender's outbox should have fewer messages
-    self.assertLess(sender_outbox_msg_count_after, sender_outbox_msg_count,
-                    "Sender's outbox should have fewer messages after processing")
+        # Step 4: Verify message delivery
+        # The sender's outbox should have fewer messages
+        self.assertLess(sender_outbox_msg_count_after, sender_outbox_msg_count,
+                        "Sender's outbox should have fewer messages after processing")
 
-    # The recipient's inbox should have more messages
-    self.assertGreater(recipient_inbox_msg_count_after, recipient_inbox_msg_count_before,
-                       "Recipient's inbox should have more messages after processing")
+        # The recipient's inbox should have more messages
+        self.assertGreater(recipient_inbox_msg_count_after, recipient_inbox_msg_count_before,
+                           "Recipient's inbox should have more messages after processing")
 
-    # If we were tracking a specific message, verify it's not in sender's outbox anymore
-    if sample_message_id:
-        self.assertNotIn(sample_message_id, sender_outbox_after,
-                         f"Message {sample_message_id} should no longer be in sender's outbox")
+        # If we were tracking a specific message, verify it's not in sender's outbox anymore
+        if sample_message_id:
+            self.assertNotIn(sample_message_id, sender_outbox_after,
+                             f"Message {sample_message_id} should no longer be in sender's outbox")
 
-        # Check if the message or its content appears in recipient's inbox
-        # This is tricky as the message ID might change during delivery
-        # So we'll check if any new messages appeared in recipient's inbox
-        new_messages = set(recipient_inbox_after.keys()) - set(
-            recipient_inbox_before.keys() if recipient_inbox_before else [])
-        self.assertGreater(len(new_messages), 0, "New messages should appear in recipient's inbox")
+            # Check if the message or its content appears in recipient's inbox
+            # This is tricky as the message ID might change during delivery
+            # So we'll check if any new messages appeared in recipient's inbox
+            new_messages = set(recipient_inbox_after.keys()) - set(
+                recipient_inbox_before.keys() if recipient_inbox_before else [])
+            self.assertGreater(len(new_messages), 0, "New messages should appear in recipient's inbox")
 
-    # Print success message
-    print("Integration test completed successfully. Messages were properly delivered.")
+        # Print success message
+        print("Integration test completed successfully. Messages were properly delivered.")
 
 
 

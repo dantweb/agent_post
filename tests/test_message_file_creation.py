@@ -81,7 +81,7 @@ class TestMultiRecipientMessage(unittest.TestCase):
             }
         }
 
-        print(f"Sending message to {self.recipient_address} onto url {self.receive_post_url}...")
+        print(f"\n\nSending message to {self.recipient_address} onto url {self.receive_post_url}...\n")
         response = requests.post(self.receive_post_url, json=payload)
         response.raise_for_status()  # Ensure the message was sent successfully
 
@@ -107,7 +107,6 @@ class TestMultiRecipientMessage(unittest.TestCase):
         MAX_RETRIES = 3
         for attempt in range(MAX_RETRIES):
             new_file, file_info = self.find_file_in_inbox(self.recipient_agent_id, message_id, message_content=message.data)
-            print(f"[DEBUG] file_info: {file_info}")
             if new_file:
                 break
             print(f"[DEBUG] Attempt {attempt + 1}/{MAX_RETRIES}: No new files yet. Retrying...\n")
