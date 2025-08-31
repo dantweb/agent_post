@@ -12,7 +12,6 @@ sys.path.insert(0, SRC_DIR)
 # Import the necessary classes from the 'src' directory [1]
 from src.city_api import CityAPI
 from src.external_api import ExternalAPI
-from src.message_repository import MessageRepository
 from src.message_service import MessageService
 
 def run_message_processing_job():
@@ -54,8 +53,6 @@ def run_message_processing_job():
 
     try:
         # **Initialize core components:**
-        # The `MessageRepository` handles database interactions for messages [15].
-        repo = MessageRepository(db_url=db_url)
         # The `CityAPI` is used to retrieve cloud agent endpoints for citizens [9, 16].
         city_api = CityAPI(api_url=city_api_url)
         # The `ExternalAPI` handles pulling messages from outboxes and delivering them to inboxes [7, 8, 17-19].
@@ -63,7 +60,7 @@ def run_message_processing_job():
 
         # **Instantiate MessageService:**
         # `MessageService` orchestrates the entire message flow, using the above components [1].
-        service = MessageService(city_api=city_api, external_api=external_api, message_repo=repo)
+        service = MessageService(city_api=city_api, external_api=external_api)
 
         print("🔄 Processing messages (fetching, saving, delivering)...")
         # **Get list of API endpoints of citizens, receive, and send messages:**
@@ -77,10 +74,6 @@ def run_message_processing_job():
         service.process_messages()
         print("✅ Messages processed and delivered successfully.")
 
-        print("🧹 Removing old messages...")
-        # The `MessageService` also has a method to automatically purge outdated messages [22, 23].
-        service.remove_old_messages()
-        print("✅ Old messages removed from the repository.")
 
     except Exception as e:
         print(f"❌ An unexpected error occurred during the cron job: {e}")

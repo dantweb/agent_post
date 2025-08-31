@@ -1,66 +1,56 @@
-Here’s a `README.md` tailored to your `agent_post` project, summarizing purpose, usage, setup, and testing:
+# Agent Post – Message Processing Service
+
+Agent Post is a Python-based microservice for message processing that:
+
+- Fetches messages from remote agents' outboxes
+- Stores the data in a local SQL database
+- Delivers messages to intended recipients (supporting multiple recipients)
+- Prevents an agent from sending a message to itself even if its address is listed multiple times
+- Automatically purges outdated messages
+
+**Status:** The agent_post service is now working reliably in production.
 
 ---
 
-## 📨 Agent Post – Message Processing Service
-
-Agent Post is a Python-based message exchange microservice that:
-
-* Fetches outbox messages from citizen endpoints.
-* Stores them into a local SQL database.
-* Delivers those messages to the intended recipients.
-* Handles multi-recipient delivery.
-* Automatically purges outdated messages.
-
-Built using:
-
-* Flask
-* SQLAlchemy
-* Alembic
-* Unittest (with mocking)
-* Docker-ready
-
----
-
-### 📦 Project Structure
+## Project Structure
 
 ```bash
 agent_post/
-├── app.py                     # Simple Flask API
-├── run_tests.py              # Unified test runner
-├── requirements.txt          # All dependencies
-├── setup/                    # Setup and teardown scripts
-│   ├── install.py            # Initializes DB and inserts demo data
-│   └── uninstall.py          # Destroys the database
-├── src/                      # Main source code
+├── app.py                     # Flask API for message endpoints
+├── run_cron.py                # Cron job runner for processing messages
+├── run_tests.py               # Unified test runner
+├── requirements.txt           # Project dependencies
+├── setup/                    
+│   ├── install.py             # Initializes and seeds the database
+│   └── uninstall.py           # Drops the database
+├── src/                       
 │   ├── message.py
 │   ├── message_repository.py
-│   ├── message_service.py
-│   ├── city_api.py
-│   └── external_api.py
-├── tests/                    # Unit and integration tests
+│   ├── message_service.py     # Core message logic (now includes filtering out self addresses)
+│   ├── city_api.py            # Communication with City API endpoints
+│   └── external_api.py        # Communicates with external agents (outbox/inbox operations)
+├── tests/                     # Unit and integration tests
 │   ├── test_message.py
 │   ├── test_message_repository.py
-│   ├── test_message_service.py
+│   ├── test_message_service.py  # Includes tests to verify filtering of the sender's own address
 │   ├── test_message_flow.py
-│   ├── test_message_delivery_payload.py
-│   └── ...
+│   └── test_message_delivery_payload.py
 └── .github/
-    └── workflows/test.yml   # GitHub Actions CI
+    └── workflows/test.yml     # GitHub Actions CI configuration
 ```
 
 ---
 
-### 🚀 Getting Started
+## Getting Started
 
-1. **Clone the repo:**
+1. **Clone the repository:**
 
    ```bash
    git clone https://github.com/YOU/agent_post.git
    cd agent_post
    ```
 
-2. **Install Python & dependencies:**
+2. **Set up the Python environment and install dependencies:**
 
    ```bash
    python3 -m venv .venv
@@ -68,11 +58,15 @@ agent_post/
    pip install -r requirements.txt
    ```
 
-3. **Set environment variables:**
-   Create `.env` file:
+3. **Configure environment variables:**  
+   Create a `.env` file based on the template below:
 
    ```env
    DATABASE_URL=postgresql://user:password@localhost:5432/agent_post
+   EXTERNAL_API_TOKEN=your_token_here
+   TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+   TELEGRAM_CHANNEL_ID=your_channel_id
+   CITY_API_URL=https://yourcityapi.example.com/api/agents/cities-data/
    ```
 
 4. **Initialize the database:**
@@ -81,15 +75,38 @@ agent_post/
    python setup/install.py
    ```
 
-5. **Run the app:**
+5. **Run the Application or Cron Processing:**  
+   To run the API:
 
    ```bash
    python app.py
    ```
 
+   To process messages via the cron job or manually:
+
+   ```bash
+   python run_message_exchange.py
+   ```
+
+   You should see output similar to:
+
+   ```
+   🚀 Starting Agent Post message processing cron job...
+   ✅ .env file loaded.
+   🔄 Processing messages (fetching, saving, delivering)...
+   ✅ Messages processed and delivered successfully.
+   🎉 Agent Post message processing cron job completed.
+   ```
+
 ---
 
-### 🧪 Running Tests
+## Running Tests
+
+Agent Post includes a comprehensive suite of tests for unit and integration scenarios. For example, the tests cover:
+
+- Message ingestion and flow
+- Approval of multiple recipients while ignoring duplicate sender addresses
+- Correct formatting and delivery of messages
 
 To run all tests:
 
@@ -97,156 +114,59 @@ To run all tests:
 python run_tests.py
 ```
 
-To run a specific test file:
+Or run specific tests via unittest:
 
 ```bash
-python -m unittest tests.test_message_flow
+python -m unittest tests/test_message_flow.py
 ```
 
 ---
 
+## Features
 
-### 🔁 Features
+- **Message Ingestion & Delivery:**  
+  Process messages by fetching from outboxes and delivering them to destination inboxes.
 
-* Message ingestion from remote agents
-* SQLAlchemy + Alembic migrations
-* Full unit + integration test coverage
-* Auto-delivery to multiple recipients
-* Cleanup of old messages
+- **Multi-Recipient Support:**  
+  A message’s `to` field can specify multiple recipients via commas, semicolons, or spaces. The backend splits, trims, and deduplicates these to ensure messages are delivered once per recipient.
 
----
+- **Self-Address Filtering:**  
+  The service prevents an agent from sending a message to itself even if listed as a recipient more than once.
 
-### 🤖 CI/CD
+- **Robust APIs:**  
+  Communicates with external agents through the ExternalAPI (for outbox collection and inbox delivery) and CityAPI (to resolve addresses).
 
-All pushes and pull requests trigger:
-
-* Unit testing via GitHub Actions
-* Artifacts upload on failure
-
-Check `.github/workflows/test.yml`.
-
-Here’s an updated `README.md` section that documents how the `external_api` and `city_api` components work, including their data formats:
+- **CI/CD Ready:**  
+  Configured for automated testing with GitHub Actions.
 
 ---
 
-### 🛰️ External API and City API Interfaces
+## External APIs
 
-This project uses two main external interfaces:
+### CityAPI
 
----
+- **Purpose:** Retrieve agent endpoints data.
+- **Usage:**  
+  The service queries `CityAPI` to obtain a mapping of agent names to their API URLs.
 
-Here is the updated `README.md` section with **examples for multiple recipients**, covering how `ExternalAPI` handles `to` fields with multiple addresses separated by `space`, `comma`, or `semicolon`:
+### ExternalAPI
 
----
+- **Purpose:**  
+  - **Collect Messages:** Fetch messages from remote agents’ outboxes.
+  - **Deliver Messages:** Post messages to recipients’ inboxes.
+- **Data Formats:**  
+  The API accepts messages with fields such as "from", "to", "data", and "metadata", where the "to" field may include multiple addresses.
 
-### 🛰️ External API and City API Interfaces
-
-This project uses two primary external interfaces to coordinate message passing between agents in a simulated smart city:
-
----
-
-#### 🌆 `CityAPI`
-
-**Class**: `src.city_api.CityAPI`
-
-**Method**: `get_cities()`
-
-**Purpose**: Retrieve cloud agent endpoints.
-
-**Example Return**:
-
-```json
-{
-  "city_name": "Loopland",
-  "cloud_id": "cloud_test",
-  "addresses": [
-    { "citizen_1": "https://cloud.mock/loopland/api/v1/agent/1234/msg" },
-    { "citizen_2": "https://cloud.mock/loopland/api/v1/agent/5678/msg" }
-  ]
-}
-```
+For more details on data formats and endpoints, please refer to the project documentation within the `src` folder.
 
 ---
 
-#### ✉️ `ExternalAPI`
+## Telegram Integration
 
-**Class**: `src.external_api.ExternalAPI`
-
-Handles:
-
-* Pulling messages from the outbox of other agents
-* Delivering messages to the inboxes of recipients
+The service also includes a Telegram integration module (see `telegram_service.py`) to create posts in a Telegram channel. This integration uses environment variables (`TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHANNEL_ID`) for credentials.
 
 ---
 
-### 📤 `collect_from_outbox(url: str)`
+## Acknowledgments
 
-* **Request**:
-  `GET <url>?token=TOKEN&action=collect_from_outbox`
-
-* **Example Response**:
-
-```json
-{
-  "messages": [
-    {
-      "from": "citizen_1",
-      "to": "citizen_2",
-      "data": "Hello!",
-      "metadata": {
-        "created_at": "2025-06-26T17:51:36"
-      }
-    }
-  ]
-}
-```
-
----
-
-### 🧑‍🤝‍🧑 Multiple Recipients Support
-
-The `to` field **can include multiple recipients** separated by:
-
-* Commas: `"citizen_2,citizen_3"`
-* Semicolons: `"citizen_2; citizen_3"`
-* Spaces: `"citizen_2 citizen_3"`
-
-**Example message with multiple recipients**:
-
-```json
-{
-  "from": "citizen_1",
-  "to": "citizen_2, citizen_3; citizen_4 citizen_5",
-  "data": "Hello all!",
-  "metadata": {
-    "created_at": "2025-06-26T17:51:36"
-  }
-}
-```
-
-**Behavior**:
-
-* The message is **split** and **delivered individually** to each recipient.
-* The backend trims whitespace and deduplicates recipient URLs using data from the `CityAPI`.
-
----
-
-### 📥 `add_to_inbox(url: str, message: Dict)`
-
-* **Request**:
-  `POST <url>?token=TOKEN&action=add_to_inbox`
-
-* **Request Payload**:
-
-```json
-{
-  "from": "citizen_1",
-  "to": "citizen_2",
-  "data": "Hello!",
-  "metadata": {
-    "created_at": "2025-06-26T17:51:36"
-  }
-}
-```
-
-If multiple recipients are specified, this call is made once per resolved recipient address.
+Thank you for using Agent Post. For any issues or improvements, please refer to the repository’s issue tracker or contribute via pull requests.

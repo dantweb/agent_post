@@ -62,7 +62,7 @@ class MessageService:
 
                             # Mark the message as delivered
                             msg.delivered_at = datetime.now()
-                            filepath = f"./{msg.delivered_at}.txt"
+                            filepath = f"./{msg.delivered_at}.json"
                             blob = {
                                 "updated_files": [{
                                     "path": filepath,
