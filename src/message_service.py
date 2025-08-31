@@ -3,6 +3,8 @@ from city_api import CityAPI
 from external_api import ExternalAPI
 from typing import Dict
 
+from src.message import Message
+
 
 class MessageService:
     def __init__(self, city_api: CityAPI, external_api: ExternalAPI):
@@ -64,7 +66,7 @@ class MessageService:
                             blob = {
                                 "updated_files": [{
                                     "path": filepath,
-                                    "file_content": msg
+                                    "file_content": msg.to_json()
                                 }]
                             }
                             response = self.external_api.add_to_inbox(recipient_url, blob)

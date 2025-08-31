@@ -91,7 +91,8 @@ class TestDirectPostToFilesystem(unittest.TestCase):
                     "result": {
                         "updated_files": [
                             {
-                                "path": f"{message_id}.json",
+                                "path": f"dir_save_"
+                                        f"{message_id}.json",
                                 "file_operation": "update",
                                 "file_content": json.dumps({
                                     "message": {
@@ -108,9 +109,7 @@ class TestDirectPostToFilesystem(unittest.TestCase):
                 }
             }
 
-            # Step 4: Send the direct CURL request to the RECEIVE_POST endpoint
-            print(f"Sending message with ID {message_id} directly to RECEIVE_POST endpoint...")
-
+            # Step 4: Send the direct CURL request to the RECEIVE_POST endpoin
             # Convert the message data to a properly escaped JSON string for curl
             json_data = json.dumps(payload)
 

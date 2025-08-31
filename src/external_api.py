@@ -6,6 +6,7 @@ from typing import Dict, List
 from requests import Response
 from requests.exceptions import RequestException
 
+from app import messages
 from src.message import Message
 
 
@@ -71,15 +72,11 @@ class ExternalAPI:
         return results
 
     def add_to_inbox(self, url: str, message: dict) -> Response:
-        if hasattr(message, 'to_dict'):
-            # Use the to_dict method we added to the Message class
-            blob = { "updated_files": [{"file_content": message.to_dict(), "path": "message.json"}] }
-            response = requests.post(url, json=blob)
-        elif isinstance(message, Message):
-            blob = { "updated_files": [{"file_content": message, "path": "message.json"}] }
-            response = requests.post(url, json=blob)
-        else:
-            blob = { "updated_files": [{"file_content": str(message), "path": "message.json"}] }
-            response = requests.post(url, json=blob)
-
+        response = requests.post(url, json=message)
         return response
+
+    def serialize_message(self, obj):
+        # Handle datetime conversion for JSON
+        if isinstance(obj, datetime):
+            return obj.isoformat()  # Convert datetime to ISO 8601 string
+        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")  # Debugging edge cases
