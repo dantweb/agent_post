@@ -175,3 +175,6 @@ class TestMessageDeliveryPayload(unittest.TestCase):
             # Restore original lists
             self.message_service.recipient_list = original_recipient_list
             self.message_service.sender_list = original_sender_list
+
+if __name__ == '__main__':
+    unittest.main()

@@ -6,12 +6,16 @@ app = Flask(__name__)
 messages = []
 
 
-@app.route('/test', methods=['GET', 'POST'])
+@app.route('/messages', methods=['GET', 'POST'])
 def handle_messages():
     if request.method == 'POST':
-        return jsonify({"message": "post request ok"}), 201
+        data = request.json
+        if not data or 'message' not in data:
+            return jsonify({"error": "Invalid input, 'message' key is required"}), 400
+        messages.append(data['message'])
+        return jsonify({"message": "Message added successfully!"}), 201
     elif request.method == 'GET':
-        return jsonify({"messages": "get request is ok"}), 200
+        return jsonify({"messages": messages}), 200
 
 
 if __name__ == '__main__':

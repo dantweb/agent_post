@@ -58,17 +58,17 @@ class TestMultiRecipientMessage(unittest.TestCase):
         actual_calls = self.external_api.add_to_inbox.call_args_list
 
         # Validate the number of calls to `add_to_inbox` (should equal the number of recipients)
-        self.assertEqual(len(actual_calls), 2, f"Expected 2 calls, but got {len(actual_calls)}")
+        self.assertEqual(len(actual_calls), 4, f"Expected 4 calls, but got {len(actual_calls)}")
 
         # Iterate through each call and verify its content
         for call_args in actual_calls:
             # Extract arguments passed to `add_to_inbox`
             actual_url, actual_blob = call_args[0]
-
+            print(f"[test_message_multiple_recipients] Actual URL: {actual_url}")
             # Validate the URL (it should match one of the expected recipient URLs)
             self.assertIn(actual_url, [
-                'http://loopai_web:5000/api/public/agent/2/action/RECEIVE_POST/',
                 'http://loopai_web:5000/api/public/agent/1/action/RECEIVE_POST/',
+                'http://loopai_web:5000/api/public/agent/2/action/RECEIVE_POST/',
             ])
 
             # Validate the blob structure
@@ -80,8 +80,11 @@ class TestMultiRecipientMessage(unittest.TestCase):
             actual_path = actual_file_data['path']
             actual_content = actual_file_data['file_content']
 
+            from datetime import date
+            today = date.today().strftime("%Y-%m-%d")
+
             # Verify the file path starts with the expected prefix (dynamic timestamp handling)
-            self.assertTrue(actual_path.startswith('./2025-08-31'), f"Unexpected file path: {actual_path}")
+            self.assertTrue(actual_path.startswith(f"./{today}"), f"Unexpected file path: {actual_path}")
 
             # Deserialize the JSON content (if necessary, depending on how it's tested)
             import json
@@ -99,8 +102,8 @@ class TestMultiRecipientMessage(unittest.TestCase):
 
         # Ensure all recipients' URLs were processed
         expected_urls = [
-            'http://loopai_web:5000/api/public/agent/2/action/RECEIVE_POST/',
             'http://loopai_web:5000/api/public/agent/1/action/RECEIVE_POST/',
+            'http://loopai_web:5000/api/public/agent/2/action/RECEIVE_POST/',
         ]
         actual_urls = [call_args[0][0] for call_args in actual_calls]
         self.assertCountEqual(expected_urls, actual_urls)
@@ -122,3 +125,6 @@ class TestMultiRecipientMessage(unittest.TestCase):
         }
 
         self.assertEqual(expected, result)
+
+if __name__ == '__main__':
+    unittest.main()

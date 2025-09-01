@@ -38,26 +38,17 @@ class MessageService:
         cities_data = self.city_api.get_cities()
         addresses_dict = self.get_agent_addresses(cities_data)
 
-        # Track processed messages to avoid duplicates
-        processed_messages = set()
-
         for agent_name, url in addresses_dict.items():
             try:
                 print(f"\n\n url for collect = {url}")
                 messages_data = self.external_api.collect_from_outbox(url)
                 for msg in messages_data:
-                    # Create a unique identifier for this message
-                    message_identifier = f"{msg.from_address}_{msg.data}_{msg.created_at}"
-
-                    # Skip if we've already processed this message
-                    if message_identifier in processed_messages:
-                        continue
-
-                    processed_messages.add(message_identifier)
-
+                    print(f"msg = {msg}")
                     for recipient in set(msg.address_list):
+                        print(f"recipient = {recipient}")
                         self.recipient_list.append(recipient)
                         recipient_url = addresses_dict.get(recipient)
+                        print(f"recipient_url = {recipient_url}")
                         if recipient_url:
                             recipient_url = recipient_url.replace("WAKEUP", "RECEIVE_POST")
 
@@ -71,6 +62,9 @@ class MessageService:
                                 }]
                             }
                             response = self.external_api.add_to_inbox(recipient_url, blob)
+
+                            print(f"response = {response}")
+
                             self.sender_list.append(msg.from_address)
 
 

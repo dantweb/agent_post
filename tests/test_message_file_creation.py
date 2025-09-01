@@ -120,3 +120,6 @@ class TestMultiRecipientMessage(unittest.TestCase):
             content = file_info.get("content", "")
             self.assertIn(f'"id": {message.id}', content)
             self.assertIn(f'"data": "{message.data}"', content)
+
+if __name__ == '__main__':
+    unittest.main()

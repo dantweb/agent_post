@@ -7,7 +7,6 @@ from src.city_api import CityAPI
 from src.external_api import ExternalAPI
 from src.message_service import MessageService
 from src.message import Message
-from unittest.mock import ANY
 
 
 
@@ -82,3 +81,6 @@ def test_message_multiple_recipients(self):
 
     # Ensure that the `delivered_at` timestamp is set on the message
     self.assertIsNotNone(self.test_message.delivered_at)
+
+if __name__ == '__main__':
+    unittest.main()

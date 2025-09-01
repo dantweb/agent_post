@@ -72,3 +72,6 @@ class TestMessage(unittest.TestCase):
         self.assertEqual('recipient@example.com', result['to_address'])
         self.assertEqual('Test dictionary conversion', result['data'])
         self.assertEqual(created_time.isoformat(), result['created_at'])
+
+if __name__ == '__main__':
+    unittest.main()

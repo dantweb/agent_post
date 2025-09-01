@@ -72,7 +72,9 @@ class ExternalAPI:
         return results
 
     def add_to_inbox(self, url: str, message: dict) -> Response:
+        print(f"Sending message to {url}...payload = {message}")
         response = requests.post(url, json=message)
+        print(f"Response: {response.status_code} {response.text}")
         return response
 
     def serialize_message(self, obj):

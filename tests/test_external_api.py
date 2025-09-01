@@ -76,3 +76,6 @@ class TestExternalAPI(unittest.TestCase):
             external_api = ExternalAPI("test_token")
             with pytest.raises(Exception):
                 external_api.add_to_inbox("test_url", {"data": "test"})
+
+if __name__ == '__main__':
+    unittest.main()

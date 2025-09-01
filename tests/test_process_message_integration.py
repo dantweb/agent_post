@@ -125,7 +125,7 @@ class TestMessageIntegration(unittest.TestCase):
 
         # Step 5: Verify delivered file details in recipient's inbox
         delivered_file = None
-        delivered_data = None
+
         for file_path, file_info in recipient_inbox_after.items():
             content = file_info.get("file_content")
             if not content:
