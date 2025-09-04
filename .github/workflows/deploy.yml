@@ -50,7 +50,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.DANTWEB_DEPLOY_TOKEN }}
+          password: ${{ secrets.AGENT_POST_DEPLOY }}
 
       - name: Build and Push Backend Docker Image
         run: |
