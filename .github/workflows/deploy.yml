@@ -16,13 +16,23 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Ensure deployment directory exists and clone/update repo into agent_post
+            # Ensure deployment directory exists
             mkdir -p /home/${{ secrets.SERVER_USERNAME }}/web_server
             cd /home/${{ secrets.SERVER_USERNAME }}/web_server
+
+            # Clone or update repo into agent_post
             if [ -d agent_post ]; then
               cd agent_post
-              git fetch --all
-              git reset --hard origin/production
+              # make sure we're in a git repo; if not, reclone
+              if [ ! -d .git ]; then
+                cd ..
+                rm -rf agent_post
+                git clone https://github.com/${{ github.repository_owner }}/agent_post.git agent_post
+                cd agent_post
+              else
+                git fetch --all --prune
+                git reset --hard origin/production
+              fi
             else
               git clone https://github.com/${{ github.repository_owner }}/agent_post.git agent_post
               cd agent_post
@@ -37,10 +47,30 @@ jobs:
               docker rm -f agent_post || true
             fi
 
-            # Build image from the repository's Dockerfile and run it
-            docker build -t agent_post:latest .
-            docker run -d --name agent_post --network shared_network --restart unless-stopped agent_post:latest
+            # Build image from the repository's Dockerfile if present
+            if [ -f Dockerfile ]; then
+              docker build -t agent_post:latest .
+              BUILD_RESULT=$?
+            else
+              echo "No Dockerfile in repo root. Skipping local build."
+              BUILD_RESULT=1
+            fi
 
-            echo "Cleaning up unused Docker resources..."
-            docker container prune -f
-            docker image prune -f
+            # If local build failed and GHCR credentials exist, try pulling the image
+            if [ "$BUILD_RESULT" -ne 0 ]; then
+              if [ -n "${{ secrets.DANTWEB_DEPLOY_TOKEN }}" ]; then
+                echo "${{ secrets.DANTWEB_DEPLOY_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+                docker pull ghcr.io/${{ github.repository_owner }}/agent_post:latest || echo "Pull failed"
+                docker logout ghcr.io || true
+                IMAGE_TO_RUN="ghcr.io/${{ github.repository_owner }}/agent_post:latest"
+              else
+                echo "No local build and no registry credentials; aborting run."
+                exit 1
+              fi
+            else
+              IMAGE_TO_RUN="agent_post:latest"
+            fi
+
+            # Run the image
+            docker run -d --name agent_post --network shared_network --restart unless-stopped $IMAGE_TO_RUN
+
