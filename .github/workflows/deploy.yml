@@ -6,60 +6,7 @@ on:
       - production
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Create Docker Network
-        run: |
-          docker network ls | grep "shared_network" || docker network create shared_network
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Set up Git credentials for HTTPS cloning
-        run: |
-          git config --global credential.helper store
-          echo "https://${{ github.actor }}:${{ secrets.DANTWEB_DEPLOY_TOKEN }}@github.com" > ~/.git-credentials
-
-      - name: Download git repo
-        run: |
-          git clone https://github.com/dantweb/agent_post.git agent_post
-
-      - name: Install dependencies and build Docker containers
-        run: |
-          cd agent_post
-          #run Dockerfile to build and prepare containers locally
-          docker build -t agent_post:latest .
-
-      - name: Prepare SSH Key
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-           mkdir -p .ssh
-           echo "${{ secrets.SSH_PRIVATE_KEY }}" > .ssh/id_rsa
-           echo "${{ secrets.SSH_PUBLIC_KEY }}" > .ssh/id_rsa.pub
-           chmod 600 .ssh/id_rsa
-           ssh-keyscan github.com > .ssh/known_hosts
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.AGENT_POST_DEPLOY }}
-
-      - name: Build and Push Backend Docker Image
-        run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/agent_post:latest ./agent_post
-          docker push ghcr.io/${{ github.repository_owner }}/agent_post:latest
-
-
   deploy:
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Run server-side deployment script
@@ -69,13 +16,31 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Navigate to the deployment directory
-            cd /home/${{ secrets.SERVER_USERNAME }}/web_server/agent_post
-            ls -la
+            # Ensure deployment directory exists and clone/update repo into agent_post
+            mkdir -p /home/${{ secrets.SERVER_USERNAME }}/web_server
+            cd /home/${{ secrets.SERVER_USERNAME }}/web_server
+            if [ -d agent_post ]; then
+              cd agent_post
+              git fetch --all
+              git reset --hard origin/production
+            else
+              git clone https://github.com/${{ github.repository_owner }}/agent_post.git agent_post
+              cd agent_post
+            fi
+
+            # Create docker network if missing
             docker network ls | grep "shared_network" || docker network create shared_network
-            docker compose pull
-            docker compose up -d --remove-orphans --force-recreate
-                        
+
+            # Stop and remove existing container if present
+            if docker ps -a --format '{{.Names}}' | grep -q '^agent_post$'; then
+              docker stop agent_post || true
+              docker rm -f agent_post || true
+            fi
+
+            # Build image from the repository's Dockerfile and run it
+            docker build -t agent_post:latest .
+            docker run -d --name agent_post --network shared_network --restart unless-stopped agent_post:latest
+
             echo "Cleaning up unused Docker resources..."
             docker container prune -f
             docker image prune -f
