@@ -6,71 +6,126 @@ on:
       - production
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Create Docker Network
+        run: |
+          docker network ls | grep "shared_network" || docker network create shared_network
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Set up Git credentials for HTTPS cloning
+        run: |
+          git config --global credential.helper store
+          echo "https://${{ github.actor }}:${{ secrets.DANTWEB_DEPLOY_TOKEN }}@github.com" > ~/.git-credentials
+
+      - name: Download git repo
+        run: |
+          git clone https://github.com/dantweb/agent_post.git agent_post
+
+      - name: Install dependencies and build Docker containers
+        run: |
+          cd agent_post
+          #run Dockerfile to build and prepare containers locally
+          docker build -t agent_post:latest .
+
+      - name: Prepare SSH Key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+           mkdir -p .ssh
+           echo "${{ secrets.SSH_PRIVATE_KEY }}" > .ssh/id_rsa
+           echo "${{ secrets.SSH_PUBLIC_KEY }}" > .ssh/id_rsa.pub
+           chmod 600 .ssh/id_rsa
+           ssh-keyscan github.com > .ssh/known_hosts
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.AGENT_POST_DEPLOY }}
+
+      - name: Build and Push Backend Docker Image
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/agent_post:latest ./agent_post
+          docker push ghcr.io/${{ github.repository_owner }}/agent_post:latest
+
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Run server-side deployment script
+      - name: Clone or update repo on server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Ensure deployment directory exists
             mkdir -p /home/${{ secrets.SERVER_USERNAME }}/web_server
             cd /home/${{ secrets.SERVER_USERNAME }}/web_server
-
-            # Clone or update repo into agent_post
             if [ -d agent_post ]; then
               cd agent_post
-              # make sure we're in a git repo; if not, reclone
-              if [ ! -d .git ]; then
-                cd ..
-                rm -rf agent_post
-                git clone https://github.com/${{ github.repository_owner }}/agent_post.git agent_post
-                cd agent_post
-              else
+              if [ -d .git ]; then
                 git fetch --all --prune
                 git reset --hard origin/production
+              else
+                git init
+                git remote add origin https://github.com/${{ github.repository_owner }}/agent_post.git
+                git fetch --depth=1 origin production
+                git reset --hard FETCH_HEAD
               fi
             else
               git clone https://github.com/${{ github.repository_owner }}/agent_post.git agent_post
               cd agent_post
             fi
 
-            # Create docker network if missing
+      - name: Upload docker-compose.yml
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cat <<EOF > /home/${{ secrets.SERVER_USERNAME }}/web_server/agent_post/docker-compose.yml
+            version: '3.8'
+            services:
+              agent_post:
+                build:
+                  context: .
+                  dockerfile: Dockerfile
+                image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/agent_post:latest
+                networks:
+                  - shared_network
+                environment:
+                  # add env vars if needed
+                restart: always
+
+            networks:
+              shared_network:
+                external: true
+            EOF
+
+      - name: Ensure Docker network exists
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
             docker network ls | grep "shared_network" || docker network create shared_network
 
-            # Stop and remove existing container if present
-            if docker ps -a --format '{{.Names}}' | grep -q '^agent_post$'; then
-              docker stop agent_post || true
-              docker rm -f agent_post || true
-            fi
-
-            # Build image from the repository's Dockerfile if present
-            if [ -f Dockerfile ]; then
-              docker build -t agent_post:latest .
-              BUILD_RESULT=$?
-            else
-              echo "No Dockerfile in repo root. Skipping local build."
-              BUILD_RESULT=1
-            fi
-
-            # If local build failed and GHCR credentials exist, try pulling the image
-            if [ "$BUILD_RESULT" -ne 0 ]; then
-              if [ -n "${{ secrets.DANTWEB_DEPLOY_TOKEN }}" ]; then
-                echo "${{ secrets.DANTWEB_DEPLOY_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
-                docker pull ghcr.io/${{ github.repository_owner }}/agent_post:latest || echo "Pull failed"
-                docker logout ghcr.io || true
-                IMAGE_TO_RUN="ghcr.io/${{ github.repository_owner }}/agent_post:latest"
-              else
-                echo "No local build and no registry credentials; aborting run."
-                exit 1
-              fi
-            else
-              IMAGE_TO_RUN="agent_post:latest"
-            fi
-
-            # Run the image
-            docker run -d --name agent_post --network shared_network --restart unless-stopped $IMAGE_TO_RUN
-
+      - name: Run docker compose to start app
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/${{ secrets.SERVER_USERNAME }}/web_server/agent_post
+            docker compose up -d

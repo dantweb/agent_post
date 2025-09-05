@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  agent_post:
+    build:
+      context: .
+      Dockerfile: Dockerfile
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/agent_post:latest
+    networks:
+      - shared_network
+    environment:
+      # If you have environment variables, define them here or via .env file
+    restart: always
+
+networks:
+  shared_network:
+    external: true
