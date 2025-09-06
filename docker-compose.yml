@@ -1,16 +1,22 @@
-version: '3.8'
-
 services:
   agent_post:
     build:
       context: .
-      Dockerfile: Dockerfile
-    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/agent_post:latest
+#    image: ghcr.io/dantweb/agent_post:latest
+    working_dir: /app
+    environment:
+      - CITY_API_URL=${CITY_API_URL}
+      - EXTERNAL_API_TOKEN=${EXTERNAL_API_TOKEN}
+      - FLASK_ENV=development
+    volumes:
+      - ./:/app
+    container_name: agent_post
+    ports:
+      - "5242:5000" # External port 5001 mapped to internal port 5000
     networks:
       - shared_network
-    environment:
-      # If you have environment variables, define them here or via .env file
-    restart: always
+
+
 
 networks:
   shared_network:

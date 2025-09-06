@@ -56,7 +56,6 @@ jobs:
         run: |
           docker build -t ghcr.io/${{ github.repository_owner }}/agent_post:latest ./agent_post
           docker push ghcr.io/${{ github.repository_owner }}/agent_post:latest
-
   deploy:
     runs-on: ubuntu-latest
     steps:
@@ -85,7 +84,7 @@ jobs:
               cd agent_post
             fi
 
-      - name: Upload docker-compose.yml
+      - name: Upload docker-compose.yml with CITY_API_URL
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_IP }}
@@ -99,11 +98,11 @@ jobs:
                 build:
                   context: .
                   dockerfile: Dockerfile
-                image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/agent_post:latest
+                image: ghcr.io/${{ github.repository_owner }}/agent_post:latest
                 networks:
                   - shared_network
                 environment:
-                  # add env vars if needed
+                  - CITY_API_URL=${{ secrets.CITY_API_URL }}
                 restart: always
 
             networks:
