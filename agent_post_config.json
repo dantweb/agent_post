@@ -1,4 +1,0 @@
-{
-  "cities_url": "http://loopai_web:5000/api/agents/cities-data/",
-  "database_url": "postgresql://postgres:admin@postgres:5432/agent_post"
-}

@@ -3,7 +3,13 @@ import json
 import os
 import sys
 import subprocess
+
+from flask.cli import load_dotenv
+
 from src.city_api import CityAPI
+import dotenv
+
+load_dotenv()
 
 
 # Define the base directory of the project, assuming the script is in agent_post/
@@ -28,14 +34,12 @@ def load_config(config_path: str) -> dict:
 
 
 def run():
-    # Load configuration from agent_post_config.json
-    config = load_config(AGENT_POST_CONFIG_JSON)
     # Extract the cities_url from the config and assign it as api_url (fallback provided)
-    api_url = config.get("cities_url", "http://example-city-api.com/cities")
+    api_url = os.getenv("CITY_API_URL",
+                        "http://loopai_web:5000/api/agents/cities-data/")
     print(f"Using API URL: {api_url}")
     city_api = CityAPI(api_url)
 
-    # Get the cities data
     try:
         cities_data = city_api.get_cities()
     except Exception as e:
