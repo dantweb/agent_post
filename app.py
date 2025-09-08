@@ -16,6 +16,8 @@ def handle_messages():
         return jsonify({"message": "Message added successfully!"}), 201
     elif request.method == 'GET':
         return jsonify({"messages": messages}), 200
+    else:
+        return jsonify({"error": "Invalid request method"}), 405
 
 
 if __name__ == '__main__':
