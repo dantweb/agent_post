@@ -119,6 +119,7 @@ class TestMessageIntegration(unittest.TestCase):
 
         # Check recipient's inbox after processing
         recipient_inbox_after = recipient_fs_after.get('filesystem', {}).get('inbox', {}).get('new', {})
+        print(f"Recipient inbox after processing: {recipient_fs_after}")
         recipient_inbox_msg_count_after = len(recipient_inbox_after) if recipient_inbox_after else 0
 
         # Step 4: Verify message delivery
