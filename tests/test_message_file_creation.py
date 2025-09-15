@@ -1,9 +1,10 @@
+import json
 import unittest
 import uuid
 import time
 from datetime import datetime
 import requests
-from flask import json
+
 
 from src.message import Message
 
@@ -22,7 +23,7 @@ class TestMultiRecipientMessage(unittest.TestCase):
 
         # Agent addresses
         self.sender_address = "FRBG/cityhall"
-        self.recipient_address = "FRBG/Agent_hwp2bg"
+        self.recipient_address = "FRBG/maria"
 
         # Generate a unique test identifier for this test run
         self.test_id = str(uuid.uuid4())[:8]
@@ -73,7 +74,7 @@ class TestMultiRecipientMessage(unittest.TestCase):
                                 "to": message.to_address,
                                 "data": message.data,
                                 "id": message.id,
-                                "created_at": message.created_at
+                                "created_at": message.created_at.isoformat(),
                             })
                         }
                     ]

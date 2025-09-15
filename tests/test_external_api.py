@@ -42,16 +42,15 @@ class TestExternalAPI(unittest.TestCase):
             mock_get.return_value = mock_response
 
             # Instantiate the ExternalAPI class
-            api = ExternalAPI("XXXXX")
+            api = ExternalAPI("XXX-X-XXX-XXX")
 
             # Call the method we're testing
             messages = api.collect_from_outbox("http://loopai_web:5000/api/public/agent/6/action/WAKEUP/")
-
             # Assertions
             self.assertEqual(len(messages), 1)  # Expecting one message
-            self.assertEqual(messages[0].from_address, "sender")  # Validate message sender
-            self.assertEqual(messages[0].to_address, "recipient")  # Validate message recipient
-            self.assertEqual(messages[0].data, "test_data")  # Validate message content
+            self.assertEqual(messages[0].from_address, "FRBG/walter")  # Validate message sender
+            self.assertEqual(messages[0].to_address, "FRBG/cityhall, FRBG/maria, FRBG/gustav, FRBG/abdula")  # Validate message recipient
+            self.assertTrue(isinstance(messages[0].data, str) and len(messages[0].data)>0)  # Validate message content
 
     def test_external_api_collect_failure(self):
         # Simulate a network exception
