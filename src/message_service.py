@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
-from city_api import CityAPI
-from external_api import ExternalAPI
+from src.city_api import CityAPI
+from src.external_api import ExternalAPI
 from typing import Dict
 
 from src.message import Message
