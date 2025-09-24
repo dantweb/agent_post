@@ -17,7 +17,7 @@ class TestCityAPI(unittest.TestCase):
                     "success": True,
                     "addresses": [
                         {
-                            "FRBG/walter": "http://loopai_web:5000/api/public/agent/6/action/WAKEUP/"
+                            "FRBG/cityhall": "http://loopai_web:5000/api/public/agent/5/action/WAKEUP/"
                         }
                     ]
                 }

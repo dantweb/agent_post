@@ -17,8 +17,8 @@ class TestDirectPostToFilesystem(unittest.TestCase):
     def setUp(self):
         """Set up test environment with necessary URLs and agent IDs"""
         # Agent information
-        self.sender_agent_id = "1"  # Sender agent ID (typically cityhall)
-        self.recipient_agent_id = "2"  # Recipient agent ID
+        self.sender_agent_id = "5"  # Sender agent ID (typically cityhall)
+        self.recipient_agent_id = "6"  # Recipient agent ID
 
         # API endpoints
         self.base_url = "http://loopai_web:5000"
