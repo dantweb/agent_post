@@ -3,7 +3,6 @@ import json
 import os
 import sys
 import subprocess
-
 from flask.cli import load_dotenv
 
 from src.city_api import CityAPI
@@ -11,7 +10,7 @@ import dotenv
 
 load_dotenv()
 
-all_loops = ["READ_POSTS", "DO_TASK_1"]
+all_loops = [ "READ_POSTS",  "DO_TASK_1" ]
 
 # Define the base directory of the project, assuming the script is in agent_post/
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
@@ -52,14 +51,12 @@ def run():
     for address_dict in cities_data.get("addresses", []):
         addresses.update(address_dict)
 
-    # Loop through each citizen's address and run the actions
-    for citizen_name, recipient_url in addresses.items():
-        for action in all_loops:
-            # Replace "WAKEUP" with "RECEIVE_POST" in the recipient URL
+
+    for action in all_loops:
+        print(f"Running action: {action}")
+        for citizen_name, recipient_url in addresses.items():
             modified_url = recipient_url.replace("WAKEUP", action)
             print(f"Citizen: {citizen_name}, Action: {action}, URL: {modified_url}")
-
-            # Execute the curl command against the modified URL
             try:
                 result = subprocess.run(
                     ["curl", modified_url],
@@ -70,7 +67,11 @@ def run():
                 print(f"curl output: {result.stdout}")
             except subprocess.CalledProcessError as e:
                 print(f"Error executing curl on {modified_url}: {e}")
+        print(f"Sleeping for 247 seconds... to run next action")
+        from time import sleep
+        sleep(247)
 
+    print("All cycles completed")
 
 if __name__ == "__main__":
     run()

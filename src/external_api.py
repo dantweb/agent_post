@@ -1,10 +1,12 @@
 import json
+import uuid
 from datetime import datetime
 
 import requests
 from typing import Dict, List
 from requests import Response
 from requests.exceptions import RequestException
+from sqlalchemy.util import md5_hex
 
 from src.broadcast_data import BroadcastData
 from src.json_helper import json_helper
@@ -38,22 +40,33 @@ class ExternalAPI:
             bc = BroadcastData(normal_json)
             file_entries = bc.find_value_recursive_by_key('updated_files')
             print(f"Found {len(file_entries)} updated files in outbox")
+            print(f"\n\n {(file_entries)} \n\n")
 
             messages = []
             if len(file_entries) > 0:
                 for entry in file_entries[0]:
                     print(f"Processing file entry: {entry}\n\n")
                     if 'file_content' in entry and 'message' in entry['file_content']:
-                        msg_data = entry['file_content']['message']
+                        possible_json = entry['file_content']['message']
+                        print(f"possible_json = {possible_json}")
+                        msg_data = possible_json
+                        if isinstance(possible_json, str):
+                             msg_data = json.loads(possible_json)
+
+                        import re
+                        def strip_non_alphanumeric(text):
+                            # Remove non-alphanumeric (and non-whitespace) from start and end
+                            # This preserves internal punctuation
+                            return re.sub(r'^[^\w\s]+|[^\w\s]+$', '', text)
 
                         # Create a Message object directly
                         message = Message(
-                            id=msg_data.get('id', None),  # Use None if id is missing
+                            id=msg_data.get('id', md5_hex(str(msg_data))),  # Use None if id is missing
                             created_at=msg_data.get('created_at', datetime.now()),  # Set current time as created_at
                             collected_at=datetime.now(),  # Set current time as collected_at
-                            from_address=msg_data.get('from', ''),
-                            to_address=msg_data.get('to', ''),
-                            data=msg_data.get('data', '')
+                            from_address=strip_non_alphanumeric(msg_data.get('from_address', msg_data.get('from', '<no sender address>'))),
+                            to_address=strip_non_alphanumeric(msg_data.get('to_address', msg_data.get('to', '<no recipient address>'))),
+                            data=strip_non_alphanumeric(msg_data.get('data', '[[-the message has no data at collection-]]'))
                         )
                         messages.append(message)
 
