@@ -87,9 +87,9 @@ jobs:
       - name: Upload docker-compose.yml with CITY_API_URL
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SERVER_IP }}
+          host: ${{ secrets.LOOPAI_SERVER2_IP }}
           username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.LOOPAI_SERVER2_IP_SSH_PRIVATE_KEY }}
           script: |
             cat <<EOF > /home/${{ secrets.SERVER_USERNAME }}/web_server/agent_post/docker-compose.yml
             version: '3.8'
@@ -106,23 +106,23 @@ jobs:
                 restart: always
 
             networks:
-              shared_network:
+              app_network:
                 external: true
             EOF
 
       - name: Ensure Docker network exists
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SERVER_IP }}
+          host: ${{ secrets.LOOPAI_SERVER2_IP }}
           username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.LOOPAI_SERVER2_IP_SSH_PRIVATE_KEY }}
           script: |
             docker network ls | grep "app_network" || docker network create app_network
 
       - name: Run docker compose to start app
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SERVER_IP }}
+          host: ${{ secrets.LOOPAI_SERVER2_IP }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
