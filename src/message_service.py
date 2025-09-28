@@ -42,6 +42,7 @@ class MessageService:
             try:
                 print(f"\n\n url for collect = {url}")
                 messages_data = self.external_api.collect_from_outbox(url)
+                print(f"messages_data collected = {messages_data}")
                 for msg in messages_data:
                     print(f"msg = {msg}")
                     for recipient in set(msg.address_list):

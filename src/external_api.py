@@ -1,5 +1,6 @@
 import json
-import uuid
+
+
 from datetime import datetime
 
 import requests
@@ -9,7 +10,6 @@ from requests.exceptions import RequestException
 from sqlalchemy.util import md5_hex
 
 from src.broadcast_data import BroadcastData
-from src.json_helper import json_helper
 from src.message import Message
 
 
@@ -30,43 +30,47 @@ class ExternalAPI:
             while True:
                 execution_response = requests.get(execution_url)
                 execution_response.raise_for_status()
-                normal_json = json_helper.normalize_json(execution_response.json())
+                raw_json = execution_response.json()
+                raw_bc = BroadcastData(raw_json)
+                print(f"raw_bc = {raw_bc}")
+                normal_json = raw_bc
                 if 'execution' in normal_json and normal_json['execution']['status'] == 'running':
                     from time import sleep
-                    sleep(1)
+                    print(f"Execution is still running, waiting 10 seconds...")
+                    sleep(3)
                 else:
                     break
 
-            bc = BroadcastData(normal_json)
+            bc = raw_bc
             file_entries = bc.find_value_recursive_by_key('updated_files')
-            print(f"Found {len(file_entries)} updated files in outbox")
-            print(f"\n\n {(file_entries)} \n\n")
+
+            if file_entries != [[]] and "path" in file_entries[0][0]:
+                print(f"Found {len(file_entries)} updated files in outbox")
+                print(f"\n\n {(file_entries)} \n\n")
+                file_entries = file_entries[0]
 
             messages = []
-            if len(file_entries) > 0:
-                for entry in file_entries[0]:
-                    print(f"Processing file entry: {entry}\n\n")
-                    if 'file_content' in entry and 'message' in entry['file_content']:
-                        possible_json = entry['file_content']['message']
-                        print(f"possible_json = {possible_json}")
-                        msg_data = possible_json
-                        if isinstance(possible_json, str):
-                             msg_data = json.loads(possible_json)
+            if len(file_entries) > 0 and file_entries != [[]]:
+                for entry in file_entries:
+                    bc_entry = BroadcastData(entry)
+                    print(f"Processing file entry: {bc_entry}\n\n")
+                    print(f"entry internals are accessible with indices : {type(bc_entry['file_content'])}" )
+                    msg_data = None
+                    if isinstance(bc_entry['file_content'], str):
+                        file_content_bc_dict = BroadcastData(json.loads(bc_entry['file_content']))
+                        msg_data = file_content_bc_dict['message']
 
-                        import re
-                        def strip_non_alphanumeric(text):
-                            # Remove non-alphanumeric (and non-whitespace) from start and end
-                            # This preserves internal punctuation
-                            return re.sub(r'^[^\w\s]+|[^\w\s]+$', '', text)
+                    if isinstance(bc_entry['file_content'], dict):
+                        msg_data = bc_entry['file_content']['message']
 
-                        # Create a Message object directly
+                    if msg_data is not None:
                         message = Message(
                             id=msg_data.get('id', md5_hex(str(msg_data))),  # Use None if id is missing
                             created_at=msg_data.get('created_at', datetime.now()),  # Set current time as created_at
                             collected_at=datetime.now(),  # Set current time as collected_at
-                            from_address=strip_non_alphanumeric(msg_data.get('from_address', msg_data.get('from', '<no sender address>'))),
-                            to_address=strip_non_alphanumeric(msg_data.get('to_address', msg_data.get('to', '<no recipient address>'))),
-                            data=strip_non_alphanumeric(msg_data.get('data', '[[-the message has no data at collection-]]'))
+                            from_address=msg_data.get('from_address', msg_data.get('from', '<no sender address>')),
+                            to_address=msg_data.get('to_address', msg_data.get('to', '<no recipient address>')),
+                            data=msg_data.get('data', '[[-the message has no data at collection-]]')
                         )
                         messages.append(message)
 

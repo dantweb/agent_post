@@ -10,7 +10,8 @@ import dotenv
 
 load_dotenv()
 
-all_loops = [ "READ_POSTS",  "DO_TASK_1" ]
+all_loops = [ "READ_POSTS", "DO_TASK_1" ]
+# all_loops = [  "DO_TASK_1" ]
 
 # Define the base directory of the project, assuming the script is in agent_post/
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
