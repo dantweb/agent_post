@@ -54,19 +54,20 @@ class MessageService:
                             recipient_url = recipient_url.replace("WAKEUP", "RECEIVE_POST")
 
                             # Mark the message as delivered
-                            msg.delivered_at = datetime.now()
-                            filepath = f"./{msg.delivered_at}.json"
+                            msg['delivered_at'] = datetime.now()
+                            msg = {"message" : msg.to_json()}
+                            filepath = f"{msg['delivered_at']}.json"
                             blob = {
                                 "updated_files": [{
                                     "path": filepath,
-                                    "file_content": msg.to_json()
+                                    "file_content": msg
                                 }]
                             }
                             response = self.external_api.add_to_inbox(recipient_url, blob)
 
                             print(f"response = {response}")
 
-                            self.sender_list.append(msg.from_address)
+                            self.sender_list.append(msg['message']['from_address'])
 
 
             except Exception as e:

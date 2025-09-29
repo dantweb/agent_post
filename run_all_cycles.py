@@ -68,9 +68,9 @@ def run():
                 print(f"curl output: {result.stdout}")
             except subprocess.CalledProcessError as e:
                 print(f"Error executing curl on {modified_url}: {e}")
-        print(f"Sleeping for 247 seconds... to run next action")
+        print(f"Sleeping for 10 seconds... to run next action")
         from time import sleep
-        sleep(247)
+        sleep(10)
 
     print("All cycles completed")
 

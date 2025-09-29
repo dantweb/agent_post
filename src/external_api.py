@@ -53,15 +53,23 @@ class ExternalAPI:
             if len(file_entries) > 0 and file_entries != [[]]:
                 for entry in file_entries:
                     bc_entry = BroadcastData(entry)
-                    print(f"Processing file entry: {bc_entry}\n\n")
-                    print(f"entry internals are accessible with indices : {type(bc_entry['file_content'])}" )
+                    print(f"\n\nProcessing file entry: {bc_entry}\n\n")
+                    print(f"\nentry internals are accessible with indices : {type(bc_entry['file_content'])}" )
                     msg_data = None
                     if isinstance(bc_entry['file_content'], str):
                         file_content_bc_dict = BroadcastData(json.loads(bc_entry['file_content']))
                         msg_data = file_content_bc_dict['message']
 
                     if isinstance(bc_entry['file_content'], dict):
-                        msg_data = bc_entry['file_content']['message']
+                        if 'message' in bc_entry['file_content'] and 'message' in bc_entry['file_content']:
+                            msg_data = bc_entry['file_content']['message']
+                        if 'data' in bc_entry['file_content'] and 'to' in bc_entry['file_content']:
+                            msg_data = bc_entry
+
+                    if ('to' in bc_entry or 'to_address' in bc_entry) and 'data' in bc_entry:
+                        msg_data = bc_entry
+
+                    print(f"\n\nmsg_data = {msg_data}\n\n")
 
                     if msg_data is not None:
                         message = Message(

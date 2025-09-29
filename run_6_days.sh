@@ -10,8 +10,8 @@ for i in {1..6}; do
     python run_message_exchange.py
 
     # Wait 1 minute
-    echo "Waiting 1 minute..."
-    sleep 69
+    echo "Waiting 10 seconds, sir..."
+    sleep 10
 
     # Run second command
     echo "Running Command 2..."
@@ -19,12 +19,12 @@ for i in {1..6}; do
     python run_all_cycles.py
 
     if [ $i -lt 6 ]; then
-        echo "Waiting 420 seconds..."
-        sleep 420
+        echo "Waiting 20 seconds, sir..."
+        sleep 20
     else
-        echo "All iterations completed!"
+        echo "All iterations completed, sir!"
     fi
 done
 
 python run_reflex.py
-sleep 420
+sleep 20
