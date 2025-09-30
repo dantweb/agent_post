@@ -18,13 +18,13 @@ for i in {1..6}; do
     # Replace the following line with your second actual command
     python run_all_cycles.py
 
-    if [ $i -lt 6 ]; then
+    if [ $i -lt 3 ]; then
         echo "Waiting 20 seconds, sir..."
-        sleep 20
+        sleep 10
     else
         echo "All iterations completed, sir!"
     fi
 done
 
 python run_reflex.py
-sleep 20
+sleep 15

@@ -54,9 +54,9 @@ class MessageService:
                             recipient_url = recipient_url.replace("WAKEUP", "RECEIVE_POST")
 
                             # Mark the message as delivered
-                            msg['delivered_at'] = datetime.now()
                             msg = {"message" : msg.to_json()}
-                            filepath = f"{msg['delivered_at']}.json"
+                            msg_id = datetime.now().isoformat()
+                            filepath = f"{msg_id}.json"
                             blob = {
                                 "updated_files": [{
                                     "path": filepath,

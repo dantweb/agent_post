@@ -72,3 +72,13 @@ class Message:
     # This method allows the class to be JSON serializable
     def __json__(self):
         return self.to_dict()
+
+    def set_collected_at(self):
+        self.collected_at = datetime.now()
+
+    def set_delivered_at(self):
+        self.delivered_at = datetime.now()
+
+    def set_created_at(self):
+        self.created_at = datetime.now()
+
