@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import uuid
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -10,8 +11,8 @@ SRC_DIR = os.path.join(BASE_DIR, 'src')
 sys.path.insert(0, SRC_DIR)
 
 # ✅ Import after setting sys.path
-from message_repository import MessageRepository
-from message import Message
+from src.message_repo import message_repo
+from src.message import Message
 
 # Load environment variables
 load_dotenv(dotenv_path=os.path.join(BASE_DIR, '.env'))
@@ -46,20 +47,19 @@ def run_migrations():
 
 def add_demo_messages():
     print("📝 Adding demo messages...")
-    repo = MessageRepository(db_url=db_url)
-    if repo.find_all():
+    if message_repo.find_all():
         print("⚠️  Messages already exist. Skipping demo inserts.")
         return
 
     now = datetime.now()
     demo_messages = [
-        Message(id=1, created_at=now, collected_at=now, delivered_at=None, from_address="alice", to_address="bob", data="Hello Bob!"),
-        Message(id=2, created_at=now, collected_at=now, delivered_at=None, from_address="carol", to_address="dave", data="Data update."),
-        Message(id=3, created_at=now, collected_at=now, delivered_at=None, from_address="eve", to_address="mallory", data="Security alert."),
+        Message(created_at=now,  from_address="alice", to_address="bob", data="Hello Bob!"),
+        Message(created_at=now, from_address="carol", to_address="dave", data="Data update."),
+        Message(created_at=now, from_address="eve", to_address="mallory", data="Security alert."),
     ]
 
     for msg in demo_messages:
-        repo.save(msg)
+        message_repo.save(msg)
 
     print(f"✅ {len(demo_messages)} demo messages added.")
 

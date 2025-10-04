@@ -4,6 +4,7 @@ from src.external_api import ExternalAPI
 from typing import Dict
 
 from src.message import Message
+from src.message_repo import message_repo
 
 
 class MessageService:
@@ -12,6 +13,7 @@ class MessageService:
         self.external_api = external_api
         self.recipient_list = []
         self.sender_list = []
+        self.repo = message_repo  # Initialize repository
 
 
     def get_agent_addresses(self, cities_data: Dict) -> Dict[str, str]:
@@ -45,6 +47,7 @@ class MessageService:
                 print(f"messages_data collected = {messages_data}")
                 for msg in messages_data:
                     print(f"msg = {msg}")
+                    self.repo.save(msg)
                     for recipient in set(msg.address_list):
                         print(f"recipient = {recipient}")
                         self.recipient_list.append(recipient)

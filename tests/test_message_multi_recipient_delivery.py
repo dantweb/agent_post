@@ -91,14 +91,8 @@ class TestMultiRecipientMessage(unittest.TestCase):
             import json
             actual_content_data = json.loads(actual_content)
 
-            # Verify the `delivered_at` field exists and is within the valid range
-            self.assertIn('delivered_at', actual_content_data)
-            delivered_timestamp = actual_content_data['delivered_at']
-            self.assertIsNotNone(delivered_timestamp, "The `delivered_at` field should not be None")
-
             # Verify the remainder of the file content matches the expected message
             expected_content_data = self.test_message.to_dict()
-            expected_content_data['delivered_at'] = delivered_timestamp  # Update with dynamic value
             self.assertDictEqual(actual_content_data, expected_content_data, "Message content does not match")
 
         # Ensure all recipients' URLs were processed

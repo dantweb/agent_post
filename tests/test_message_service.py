@@ -25,7 +25,6 @@ class TestMessageService(unittest.TestCase):
             from_address='test_sender',
             to_address='agent1, agent2',  # Multiple recipients in comma-separated format
             data='Test multi-recipient message',
-            id=234,
             created_at=datetime(2025, 8, 4, 6, 1, 30, 826055),
         )
 
@@ -76,11 +75,7 @@ def test_message_multiple_recipients(self):
         self.assertEqual(file_content['from_address'], self.test_message.from_address)
         self.assertEqual(file_content['to_address'], self.test_message.to_address)
         self.assertEqual(file_content['data'], self.test_message.data)
-        self.assertIn('delivered_at', file_content)
-        self.assertIsNotNone(file_content['delivered_at'])  # Ensure `delivered_at` is set
 
-    # Ensure that the `delivered_at` timestamp is set on the message
-    self.assertIsNotNone(self.test_message.delivered_at)
 
 if __name__ == '__main__':
     unittest.main()

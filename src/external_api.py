@@ -75,7 +75,6 @@ class ExternalAPI:
                         message = Message(
                             id=msg_data.get('id', md5_hex(str(msg_data))),  # Use None if id is missing
                             created_at=msg_data.get('created_at', datetime.now()),  # Set current time as created_at
-                            collected_at=datetime.now(),  # Set current time as collected_at
                             from_address=msg_data.get('from_address', msg_data.get('from', '<no sender address>')),
                             to_address=msg_data.get('to_address', msg_data.get('to', '<no recipient address>')),
                             data=msg_data.get('data', '[[-the message has no data at collection-]]')

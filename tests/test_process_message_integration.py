@@ -164,12 +164,6 @@ class TestMessageIntegration(unittest.TestCase):
         except ValueError:
             self.fail("The timestamp part of the filename is not an integer")
 
-        # Check that the delivered message JSON content includes a delivered_at timestamp.
-        self.assertIn("delivered_at", delivered_file["data"],
-                      "Delivered message content must include a 'delivered_at' property")
-        self.assertIsNotNone(delivered_file["data"]["delivered_at"],
-                             "The 'delivered_at' field should not be None in the delivered content")
-
 
 
 if __name__ == '__main__':

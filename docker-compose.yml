@@ -8,6 +8,7 @@ services:
       - CITY_API_URL=${CITY_API_URL}
       - EXTERNAL_API_TOKEN=${EXTERNAL_API_TOKEN}
       - FLASK_ENV=development
+      - DATABASE_URL=${DATABASE_URL}
     volumes:
       - ./:/app
     container_name: agent_post

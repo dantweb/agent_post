@@ -1,3 +1,5 @@
+##filepath: ./src/message.py
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional, List
@@ -9,10 +11,14 @@ class Message:
     from_address: str
     to_address: str
     data: str
-    id: int = None
+    id: Optional[str] = None
     created_at: datetime = field(default_factory=datetime.now)
-    collected_at: Optional[datetime] = None
-    delivered_at: Optional[datetime] = None
+
+    def __post_init__(self):
+        if not self.id:
+            self.id = str(uuid.uuid4())
+        else:
+            self.id = str(self.id)  # convert int or UUID to string
 
     @property
     def address_list(self) -> List[str]:
@@ -32,7 +38,7 @@ class Message:
         return to_list
 
     def is_old(self, days: int = 3) -> bool:
-        return self.collected_at and (datetime.now() - self.collected_at).days > days
+        return self.created_at and (datetime.now() - self.created_at).days > days
 
     def __eq__(self, other):
         if not isinstance(other, Message):
@@ -48,10 +54,8 @@ class Message:
     def to_dict(self):
         """Convert the message to a dictionary with serialized datetime values."""
         result = {
-            'id': self.id,
+            "id": str(self.id) if self.id else None,  # Convert UUID to string
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'collected_at': self.collected_at.isoformat() if self.collected_at else None,
-            'delivered_at': self.delivered_at.isoformat() if self.delivered_at else None,
             'from_address': self.from_address,
             'to_address': self.to_address,
             'data': self.data,
@@ -73,11 +77,6 @@ class Message:
     def __json__(self):
         return self.to_dict()
 
-    def set_collected_at(self):
-        self.collected_at = datetime.now()
-
-    def set_delivered_at(self):
-        self.delivered_at = datetime.now()
 
     def set_created_at(self):
         self.created_at = datetime.now()
