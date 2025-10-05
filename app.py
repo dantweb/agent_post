@@ -2,15 +2,15 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# In-memory storage for messages
 messages = []
 from src.message_repo import message_repo as msg_repo
 
 # New endpoint: /api/public/messages/
-@app.route('/api/public/messages/', methods=['GET'])
+@app.route('/api/public/messages/', methods=['POST'])
 def get_public_messages():
     try:
-        all_messages = msg_repo.find_all()
+        agents_of_user = request.json.get('agents_of_user')
+        all_messages = msg_repo.get_messages_for_the_given_agents(agents_of_user)
         messages_json = [msg.to_dict() for msg in all_messages]
         return jsonify({"messages": messages_json}), 200
     except Exception as e:
