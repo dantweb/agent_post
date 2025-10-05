@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
 
 
 WORKDIR /app
-
+RUN mkdir -p /app/var/logs
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 

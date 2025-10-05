@@ -12,7 +12,7 @@ class Message:
     to_address: str
     data: str
     id: Optional[str] = None
-    created_at: datetime = field(default_factory=datetime.now)
+    created_at: Optional[datetime] = field(default_factory=datetime.now)
 
     def __post_init__(self):
         if not self.id:
@@ -54,8 +54,12 @@ class Message:
     def to_dict(self):
         """Convert the message to a dictionary with serialized datetime values."""
         result = {
-            "id": str(self.id) if self.id else None,  # Convert UUID to string
-            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'id': str(self.id) if self.id else None,  # Convert UUID to string
+            'created_at': (
+                self.created_at.isoformat()
+                if isinstance(self.created_at, datetime)
+                else self.created_at
+            ),
             'from_address': self.from_address,
             'to_address': self.to_address,
             'data': self.data,

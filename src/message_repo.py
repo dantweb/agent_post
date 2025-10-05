@@ -8,12 +8,17 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine, Column, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+
+from src.logger_service import get_logger
 from src.message import Message
 
 load_dotenv()
 
 Base = declarative_base()
 DB_URL = os.getenv('DATABASE_URL')
+
+logger = get_logger("agent_post")
+logger.info("Starting agent_post Flask app")
 
 class MessageModel(Base):
     __tablename__ = 'messages'
@@ -77,6 +82,7 @@ class MessageRepository:
             session.close()
 
     def get_messages_for_the_given_agents(self, agents_of_user: List[str]):
+        from sqlalchemy import or_
         session = self.Session()
         try:
             if not agents_of_user:
@@ -97,10 +103,10 @@ class MessageRepository:
 
             messages = [
                 Message(
-                    id=m.id,
-                    from_address=m.from_address,
-                    to_address=m.to_address,
-                    data=m.data,
+                    id=str(m.id),
+                    from_address=str(m.from_address),
+                    to_address=str(m.to_address),
+                    data=str(m.data),
                     created_at=m.created_at,
                 )
                 for m in models

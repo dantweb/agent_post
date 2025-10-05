@@ -8,9 +8,14 @@ services:
       - CITY_API_URL=${CITY_API_URL}
       - EXTERNAL_API_TOKEN=${EXTERNAL_API_TOKEN}
       - FLASK_ENV=development
+      - FLASK_DEBUG=1
       - DATABASE_URL=${DATABASE_URL}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - LOG_PATH=${LOG_PATH}
     volumes:
       - ./:/app
+      - ./var/logs:/app/var/logs  # Host log folder
+
     container_name: agent_post
     ports:
       - "5242:5000" # External port 5001 mapped to internal port 5000
