@@ -17,6 +17,89 @@ class ExternalAPI:
     def __init__(self, token: str):
         self.token = token
 
+    def _extract_message_data(self, file_entry: Dict) -> Dict:
+        """
+        Extract message data from file_content structure with flexible field aliasing.
+
+        Handles multiple field name variations since LLM-generated messages use inconsistent naming:
+        - from/from_address/from_agent/sender/sender_address
+        - to/to_address/to_agent/recipient/recipient_address/address_to
+        - body/data/message_body/message_data/content/message
+        - timestamp/created_at/time/date
+        - message_id/id/msg_id
+
+        Args:
+            file_entry: Dictionary containing 'file_content' and 'path' keys
+
+        Returns:
+            Dictionary with standardized field names or None if required fields missing
+        """
+        file_content = file_entry.get('file_content')
+        if not file_content:
+            return None
+
+        # Handle JSON string in file_content
+        if isinstance(file_content, str):
+            try:
+                file_content = json.loads(file_content)
+            except json.JSONDecodeError:
+                print(f"ERROR: Invalid JSON string in file_content")
+                return None
+
+        # Check for nested 'message' key (common pattern)
+        if isinstance(file_content, dict) and 'message' in file_content:
+            msg_data = file_content['message']
+        else:
+            msg_data = file_content
+
+        # Field aliases for flexible extraction
+        from_aliases = ['from', 'from_address', 'from_agent', 'sender', 'sender_address']
+        to_aliases = ['to', 'to_address', 'to_agent', 'recipient', 'recipient_address', 'address_to']
+        data_aliases = ['data', 'body', 'message_body', 'message_data', 'content', 'message']
+        timestamp_aliases = ['timestamp', 'created_at', 'time', 'date']
+        id_aliases = ['id', 'message_id', 'msg_id']
+
+        # Extract fields using aliases
+        extracted = {}
+
+        # Find 'from' field
+        for alias in from_aliases:
+            if alias in msg_data and msg_data[alias]:
+                extracted['from_address'] = msg_data[alias]
+                break
+
+        # Find 'to' field
+        for alias in to_aliases:
+            if alias in msg_data and msg_data[alias]:
+                extracted['to_address'] = msg_data[alias]
+                break
+
+        # Find 'data' field
+        for alias in data_aliases:
+            if alias in msg_data:
+                extracted['data'] = msg_data[alias]
+                break
+
+        # Find 'timestamp' field (optional)
+        for alias in timestamp_aliases:
+            if alias in msg_data and msg_data[alias]:
+                extracted['timestamp'] = msg_data[alias]
+                break
+
+        # Find 'id' field (optional)
+        for alias in id_aliases:
+            if alias in msg_data and msg_data[alias]:
+                extracted['id'] = msg_data[alias]
+                break
+
+        # Validate required fields
+        if 'from_address' not in extracted or 'to_address' not in extracted:
+            print(f"ERROR: Missing required fields. from_address: {extracted.get('from_address')}, to_address: {extracted.get('to_address')}")
+            return None
+
+        print(f"SUCCESS: Extracted message from {extracted['from_address']} to {extracted['to_address']}")
+        return extracted
+
     def collect_from_outbox(self, url: str) -> List[Message]:
         try:
             response: Response = requests.post(url)
@@ -55,29 +138,17 @@ class ExternalAPI:
                     bc_entry = BroadcastData(entry)
                     print(f"\n\nProcessing file entry: {bc_entry}\n\n")
                     print(f"\nentry internals are accessible with indices : {type(bc_entry['file_content'])}" )
-                    msg_data = None
-                    if isinstance(bc_entry['file_content'], str):
-                        file_content_bc_dict = BroadcastData(json.loads(bc_entry['file_content']))
-                        msg_data = file_content_bc_dict['message']
 
-                    if isinstance(bc_entry['file_content'], dict):
-                        if 'message' in bc_entry['file_content'] and 'message' in bc_entry['file_content']:
-                            msg_data = bc_entry['file_content']['message']
-                        if 'data' in bc_entry['file_content'] and 'to' in bc_entry['file_content']:
-                            msg_data = bc_entry
-
-                    if ('to' in bc_entry or 'to_address' in bc_entry) and 'data' in bc_entry:
-                        msg_data = bc_entry
-
-                    print(f"\n\nmsg_data = {msg_data}\n\n")
+                    # Use new _extract_message_data method with field aliasing
+                    msg_data = self._extract_message_data(dict(bc_entry))
 
                     if msg_data is not None:
                         message = Message(
-                            id=msg_data.get('id', md5_hex(str(msg_data))),  # Use None if id is missing
-                            created_at=msg_data.get('created_at', datetime.now()),  # Set current time as created_at
-                            from_address=msg_data.get('from_address', msg_data.get('from', '<no sender address>')),
-                            to_address=msg_data.get('to_address', msg_data.get('to', '<no recipient address>')),
-                            data=msg_data.get('data', '[[-the message has no data at collection-]]')
+                            id=msg_data.get('id', md5_hex(str(msg_data))),
+                            created_at=msg_data.get('timestamp', msg_data.get('created_at', datetime.now())),
+                            from_address=msg_data.get('from_address'),
+                            to_address=msg_data.get('to_address'),
+                            data=msg_data.get('data', '')
                         )
                         messages.append(message)
 
