@@ -1,282 +1,74 @@
-# Implementation Plan - Message Exchange System Fixes
+# LoopAI Implementation Strategy
 
-**Version:** 1.0
-**Date:** 2025-11-16
-**Status:** Planning
-**Duration:** 2 weeks (Sprint 3 & 4)
+## Core Principle
 
----
+**The existing LoopAI architecture is sufficient** - step_model, adapters, executors provide everything needed for self-conscious agents working in team collaboration on complex, non-linear projects.
 
-## Overview
+We don't need to rebuild. We need to use what exists intelligently.
 
-This implementation plan breaks down the TDD-first fixing strategy from [FIXING_PLAN.md](../FIXING_PLAN.md) into actionable sprints with concrete tasks, acceptance criteria, and deliverables.
+## Documents
 
----
+### 1. [Leveraging Existing Architecture](./leveraging_existing_architecture.md) ⭐ MAIN DOCUMENT
+**The practical approach using existing LoopAI infrastructure**
 
-## Sprint Structure
+Key insight: Achieve self-conscious, collaborative agents by:
+- Context injection via filesystem inputs (no core changes)
+- Intelligent orchestration layer (uses existing API)
+- Project awareness through context files
+- Dependency detection via filesystem analysis
 
-### Sprint 3: Message Extraction Fix (Week 1)
-**Duration:** 5 days
-**Focus:** Fix Issue #1 - Message extraction from WAKEUP responses
-**Approach:** Strict TDD with RED-GREEN-REFACTOR cycles
+**What stays the same:**
+✅ step_model, adapters, executors
+✅ YAML loop structure
+✅ Web API endpoints
 
-**Deliverables:**
-- ✅ Message extraction working for all format variations
-- ✅ Comprehensive unit tests
-- ✅ Integration tests passing
-- ✅ Messages successfully delivered to recipients
+**What we add:**
+📁 Context files (agents read project state)
+🧠 Smart orchestrator (decides when to run loops)
+📊 Project state analyzer (reads filesystem)
+🔗 Dependency detector (filesystem-based)
 
-**Document:** [SPRINT_3_MESSAGE_EXTRACTION.md](SPRINT_3_MESSAGE_EXTRACTION.md)
+Expected impact: 35% → 80-90% success rate
 
----
+### 2. [Intelligent YAML-Loop Orchestration](./intelligent_yaml_loop_orchestration.md)
+Detailed patterns for orchestration strategies
 
-### Sprint 4: RECEIVE_POST Configuration Fix (Week 2)
-**Duration:** 5 days
-**Focus:** Fix Issue #2 - RECEIVE_POST/READ_POSTS file operations
-**Approach:** Test-driven configuration with integration validation
+- State-driven execution
+- Adaptive polling frequencies
+- Collaboration triggers
 
-**Deliverables:**
-- ✅ READ_POSTS generating updated_files response
-- ✅ Messages moving from inbox/new to inbox/read
-- ✅ Tasks created for agents
-- ✅ End-to-end message flow working
+### 3. [Immediate Fixes: Protocol Execution](./immediate_fixes_protocol_execution.md)
+Quick diagnostic wins
 
-**Document:** [SPRINT_4_RECEIVE_POST_CONFIG.md](SPRINT_4_RECEIVE_POST_CONFIG.md)
+- LLM response logging
+- Format validation
+- File operation executor
 
----
+## Architecture Constraint
 
-## Sprint Timeline
+All agents share the **same YAML loops** (agent-agnostic).
 
-```
-Week 1: Sprint 3 - Message Extraction Fix
-├── Day 1: TDD Cycle 1 - Body field mapping
-├── Day 2: TDD Cycle 2 - Field aliases
-├── Day 3: TDD Cycle 3 - Validation + Refactor
-├── Day 4: Integration testing
-└── Day 5: Documentation + Buffer
+Agents differ only in:
+- Identity (`/self/self_identity.json`)
+- Skills/protocols (`/skills/`)
+- Context (files provided by orchestrator)
 
-Week 2: Sprint 4 - RECEIVE_POST Config Fix
-├── Day 1-2: Configuration analysis & TDD setup
-├── Day 3: READ_POSTS implementation
-├── Day 4: Integration testing
-└── Day 5: End-to-end validation + Documentation
-```
+## Implementation Approach
 
----
+**Phase 1**: Context files + smart prompts (Week 1)
+**Phase 2**: Intelligent orchestrator using existing API (Week 2-3)
+**Phase 3**: Dependency detection + project awareness (Week 4)
 
-## Success Metrics
+Target: 80-90% collaboration success with **zero core changes**.
 
-### Sprint 3 Success Criteria
+## Key Insight
 
-- [ ] All unit tests passing (10+ new tests)
-- [ ] Message extraction success rate: 100%
-- [ ] No `msg_data = None` errors in logs
-- [ ] Messages delivered to recipient inboxes
-- [ ] Database contains extracted messages
+step_model + adapters + executors + web API = **Complete foundation**
 
-### Sprint 4 Success Criteria
+Just add intelligent orchestration layer that:
+1. Writes context files before execution
+2. Decides which agents run which loops when
+3. Detects dependencies via filesystem
+4. Provides project awareness
 
-- [ ] No IndexError on empty updated_files
-- [ ] Messages moved from inbox/new to inbox/read
-- [ ] Tasks created in agent task directories
-- [ ] End-to-end message exchange working
-- [ ] Round-trip communication successful
-
-### Overall Success Criteria
-
-- [ ] cityhall sends message to padre ✅
-- [ ] padre receives message in inbox ✅
-- [ ] padre reads message and creates task ✅
-- [ ] padre responds to cityhall ✅
-- [ ] cityhall receives response ✅
-
----
-
-## Team Capacity
-
-**Developers:** 1-2 developers
-**Estimated Hours:**
-- Sprint 3: 20-30 hours (4-6 hours/day)
-- Sprint 4: 20-30 hours (4-6 hours/day)
-- Total: 40-60 hours
-
-**Buffer:** 20% for unexpected issues
-
----
-
-## Risk Management
-
-### High Risk Items
-
-| Risk | Mitigation | Contingency |
-|------|------------|-------------|
-| Unknown message format variations | Extensive debug logging first | Manual format analysis |
-| RECEIVE_POST config complexity | Study existing working actions | Simplify to minimal working config |
-| Breaking existing functionality | Comprehensive test suite | Git rollback plan |
-
-### Medium Risk Items
-
-| Risk | Mitigation | Contingency |
-|------|------------|-------------|
-| Integration test failures | Isolated testing environment | Mock-based testing fallback |
-| Performance degradation | Performance benchmarks | Optimize after functionality works |
-
----
-
-## Dependencies
-
-### Technical Dependencies
-
-- LoopAI web service running
-- All 5 Living Agents configured (Loops 70-74)
-- Database accessible
-- Docker environment operational
-
-### Process Dependencies
-
-- Code review approval
-- Test coverage requirements (>80%)
-- Documentation updates
-- Regression testing
-
----
-
-## Daily Standup Format
-
-**What was completed yesterday?**
-- Tests written
-- Tests passing
-- Integration status
-
-**What will be done today?**
-- Next TDD cycle
-- Specific test to write
-- Expected outcome
-
-**Any blockers?**
-- Technical issues
-- Dependency problems
-- Unclear requirements
-
----
-
-## Sprint Documents
-
-1. **[SPRINT_3_MESSAGE_EXTRACTION.md](SPRINT_3_MESSAGE_EXTRACTION.md)**
-   - Day-by-day TDD cycles
-   - Specific test cases
-   - Implementation steps
-   - Acceptance criteria
-
-2. **[SPRINT_4_RECEIVE_POST_CONFIG.md](SPRINT_4_RECEIVE_POST_CONFIG.md)**
-   - Configuration analysis
-   - Test-driven configuration approach
-   - Integration validation
-   - End-to-end testing
-
-3. **[TESTING_CHECKLIST.md](TESTING_CHECKLIST.md)**
-   - Unit test checklist
-   - Integration test checklist
-   - Manual test scripts
-   - Regression test suite
-
-4. **[DEFINITION_OF_DONE.md](DEFINITION_OF_DONE.md)**
-   - Code complete criteria
-   - Test coverage requirements
-   - Documentation requirements
-   - Review approval process
-
----
-
-## TDD Principles Reminder
-
-### RED-GREEN-REFACTOR Cycle
-
-1. **RED:** Write failing test
-   - Test describes desired behavior
-   - Test fails (no implementation yet)
-   - Commit: "RED: Test for feature X"
-
-2. **GREEN:** Minimal implementation
-   - Write simplest code to pass test
-   - Test passes
-   - Commit: "GREEN: Implement feature X"
-
-3. **REFACTOR:** Improve code
-   - Clean up implementation
-   - All tests still pass
-   - Commit: "REFACTOR: Clean up feature X"
-
-### TDD Best Practices
-
-- ✅ Write test before code
-- ✅ One test at a time
-- ✅ Minimal implementation
-- ✅ Run tests frequently
-- ✅ Refactor continuously
-- ❌ Don't skip tests
-- ❌ Don't write production code without failing test
-- ❌ Don't refactor without green tests
-
----
-
-## Communication Plan
-
-### Daily Updates
-
-- Commit messages follow TDD convention
-- Push to feature branch daily
-- Update sprint progress tracker
-
-### Weekly Review
-
-- Sprint retrospective
-- Demo working features
-- Adjust next sprint plan
-
-### Documentation Updates
-
-- Update docs after feature complete
-- Keep examples synchronized with code
-- Document known issues and workarounds
-
----
-
-## Rollback Strategy
-
-### Git Strategy
-
-```bash
-# Feature branches
-git checkout -b sprint3-message-extraction
-git checkout -b sprint4-receive-post-config
-
-# Rollback if needed
-git checkout main
-git revert <commit-hash>
-```
-
-### Testing Before Merge
-
-1. All unit tests pass
-2. All integration tests pass
-3. Manual smoke test
-4. Code review approved
-5. Documentation updated
-
----
-
-## Reference Documents
-
-- **Main Fixing Plan:** [../FIXING_PLAN.md](../FIXING_PLAN.md)
-- **Architecture:** [../ARCHITECTURE.md](../ARCHITECTURE.md)
-- **Message Flow:** [../MESSAGE_FLOW.md](../MESSAGE_FLOW.md)
-- **Testing Guide:** [../TESTING_GUIDE.md](../TESTING_GUIDE.md)
-- **API Reference:** [../API_REFERENCE.md](../API_REFERENCE.md)
-
----
-
-**Document Version:** 1.0
-**Last Updated:** 2025-11-16
-**Sprint Start Date:** TBD
-**Maintainer:** LoopAI Implementation Team
+Result: Self-conscious agents collaborating on complex projects.
